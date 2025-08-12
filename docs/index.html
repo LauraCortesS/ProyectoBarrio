@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Web</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Estilos del encabezado */
+        header {
+            display: flex;
+            align-items: center;
+            background-color: #0D0D0D;
+            color: white;
+            padding: 5px 30px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        header img {
+            height: 35px; /* Ajusta el tamaño del logo */
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-left: 20px; /* Espaciado configurable entre el logo y el título */
+        }
+
+        /* Estilos para la barra de filtros */
+        .filters-bar {
+            background-color: #333333;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+        }
+
+        .filter {
+            margin: 0 15px; /* Espaciado entre los filtros */
+        }
+
+        select {
+            padding: 5px;
+            font-size: 16px;
+            background-color: #555555;
+            color: white;
+            border: 1px solid #333;
+            border-radius: 4px;
+        }
+
+        /* Estilos para la imagen de portada */
+        .hero-image {
+            width: 100%; /* Ocupa todo el ancho de la pantalla */
+            height: 820px; /* Puedes ajustar la altura según lo necesites */
+            background-image: url('../portadabarrio.jpg'); /* Ruta de la imagen */
+            background-position: center; /* Centra la imagen */
+            background-size: cover; /* Asegura que la imagen cubra todo el contenedor */
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Encabezado -->
+    <header>
+        <div class="logo-container">
+            <img src="../mapa.png" alt="Logo">
+        </div>
+        <h1>Bosque Popular</h1>
+    </header>
+
+    <!-- Barra de Filtros -->
+    <div class="filters-bar">
+        <div class="filter">
+            <select>
+                <option value="">Equipamientos</option>
+                <!-- Opciones futuras aquí -->
+            </select>
+        </div>
+        <div class="filter">
+            <select>
+                <option value="">Problemáticas</option>
+                <!-- Opciones futuras aquí -->
+            </select>
+        </div>
+        <div class="filter">
+            <select>
+                <option value="">Acerca de mí</option>
+                <!-- Opciones futuras aquí -->
+            </select>
+        </div>
+    </div>
+
+    <!-- Imagen de portada -->
+    <div class="hero-image"></div>
+
+</body>
+</html>
+
