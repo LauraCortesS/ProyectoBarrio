@@ -62,7 +62,21 @@
             background-position: center; /* Centra la imagen */
             background-size: cover; /* Asegura que la imagen cubra todo el contenedor */
             background-repeat: no-repeat;
+            position: relative; /* Permite que el título se posicione sobre la imagen */
         }
+
+        /* Título encima de la imagen */
+        .hero-title {
+            position: absolute;
+            top: 50%; /* Centra el título verticalmente */
+            left: 50%; /* Centra el título horizontalmente */
+            transform: translate(-50%, -50%); /* Ajusta el desplazamiento para el centro perfecto */
+            color: white; /* Color del texto */
+            font-size: 85px; /* Tamaño del texto */
+            font-weight: bold; /* Grosor del texto */
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); /* Sombra suavizada */
+        }
+
     </style>
 </head>
 <body>
@@ -98,8 +112,9 @@
     </div>
 
     <!-- Imagen de portada -->
-    <div class="hero-image"></div>
+    <div class="hero-image">
+        <div class="hero-title">Barrio Bosque Popular</div>
+    </div>
 
 </body>
 </html>
-
