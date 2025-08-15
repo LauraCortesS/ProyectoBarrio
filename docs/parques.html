@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página con Mapa Leaflet</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            background-color: #0D0D0D;
+            color: white;
+            padding: 5px 30px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        header img {
+            height: 35px;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-left: 20px;
+        }
+
+        .filters-bar {
+            background-color: #333333;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+        }
+
+        .filter {
+            margin: 0 15px;
+        }
+
+        select {
+            padding: 5px;
+            font-size: 16px;
+            background-color: #555555;
+            color: white;
+            border: 1px solid #333;
+            border-radius: 4px;
+        }
+
+        /* Mapa */
+        #map {
+            flex: 2; /* Toma dos partes del espacio */
+            height: 100%;
+        }
+
+        /* Descripción */
+        .description {
+            flex: 1; /* Toma una parte del espacio */
+            padding: 20px;
+            background-color: #f4f4f4;
+            overflow-y: auto;
+            border-left: 1px solid #ccc;
+        }
+
+        /* Contenedor de mapa y descripción */
+        .container {
+            display: flex;
+            height: calc(100vh - 120px); /* Total menos encabezado y barra de filtros */
+        }
+
+        button {
+            padding: 8px 16px;
+            font-size: 14px;
+            background-color: #444444;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Encabezado -->
+    <header>
+        <div class="logo-container">
+            <img src="imagenes/mapa.png" alt="Logo">
+        </div>
+        <h1>Bosque Popular</h1>
+    </header>
+
+    <!-- Barra de Filtros -->
+    <div class="filters-bar">
+        <div class="filter">
+            <select>
+                <option value="">Equipamientos</option>
+                <!-- Opciones futuras aquí -->
+            </select>
+        </div>
+        <div class="filter">
+            <select>
+                <option value="">Problemáticas</option>
+                <!-- Opciones futuras aquí -->
+            </select>
+        </div>
+        <div class="filter">
+            <a href="acerca-de-mi.html">
+                <button>Acerca de mí</button>
+            </a>
+        </div>
+    </div>
+
+    <!-- Contenedor para el mapa y la descripción -->
+    <div class="container">
+        <!-- Mapa Leaflet -->
+        <div id="map"></div>
+
+        <!-- Descripción -->
+        <div class="description">
+            <h2>Descripción del Polígono</h2>
+            <p>Haz clic en un polígono del mapa para ver más información sobre el parque.</p>
+        </div>
+    </div>
+
+    <!-- Scripts de Leaflet -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Crear el mapa
+        const map = L.map('map').setView([4.670473643688381, -74.09632602920297], 17); // Coordenadas actualizadas
+
+        // Agregar capa de mapa
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Cargar GeoJSON (parques.geojson)
+        fetch('parques.geojson') // Ruta al archivo GeoJSON
+            .then(response => response.json())
+            .then(data => {
+                // Agregar los polígonos al mapa
+                L.geoJSON(data, {
+                    onEachFeature: function (feature, layer) {
+                        layer.on('click', function () {
+                            // Cambiar el contenido de la sección de descripción al hacer clic
+                            document.querySelector('.description').innerHTML = `
+                                <h2>${feature.properties.nombre}</h2>
+                                <p>${feature.properties.descripcion}</p>
+                            `;
+                        });
+                    }
+                }).addTo(map);
+            });
+    </script>
+
+</body>
+</html>
