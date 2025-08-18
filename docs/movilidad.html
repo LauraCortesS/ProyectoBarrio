@@ -199,20 +199,51 @@
             });
         
         // Cargar GeoJSON
-        fetch('Rutas_Zonales_SITP.geojson')
+         // Función para cargar y mostrar GeoJSON
+    function addGeoJson(url, color, name) {
+        fetch(url)
             .then(response => response.json())
             .then(data => {
                 L.geoJSON(data, {
+                    style: {
+                        color: color,
+                        weight: 3,
+                        opacity: 0.8
+                    },
                     onEachFeature: function (feature, layer) {
+                        let info = '';
+                        if (feature.properties.nombre) {
+                            info = `<h3>${feature.properties.nombre}</h3>`;
+                        } else if (feature.properties.abreviatura_destino_zona_sitp) {
+                            info = `<h3>Zona SITP: ${feature.properties.abreviatura_destino_zona_sitp}</h3>`;
+                        } else if (feature.properties.id_trazado_troncal) {
+                            info = `<h3>Trazado: ${feature.properties.id_trazado_troncal}</h3>`;
+                        }
+
+                        // Mostrar descripción si existe
+                        if (feature.properties.descripcion) {
+                            info += `<p>${feature.properties.descripcion}</p>`;
+                        } else {
+                            info += '<p>No hay descripción disponible.</p>';
+                        }
+
                         layer.on('click', function () {
-                            document.querySelector('.description').innerHTML = `
-                                <h2>${feature.properties.nombre}</h2>
-                                <p>${feature.properties.descripcion}</p>
-                            `;
+                            document.querySelector('.description').innerHTML = info;
                         });
+
+                        // Opcional: agregar popup al pasar el mouse
+                        layer.bindPopup(info);
                     }
                 }).addTo(map);
-            });
+            })
+            .catch(err => console.error("Error cargando archivo:", url, err));
+    }
+
+    // Cargar los tres archivos GeoJSON
+    addGeoJson('./Rutas_Zonales_SITP.geojson', '#E6654E', 'Troncales TransMilenio');
+    addGeoJson('./Rutas_Zonales_SITP.geojson', '#6346E5', 'Rutas Zonales SITP');
+    addGeoJson('./Paraderos_Zonales_del_SITP.geojson', '#6E9EE6', 'Paraderos Zonales SITP');
+
     </script>
 
 </body>
