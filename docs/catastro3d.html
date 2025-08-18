@@ -174,7 +174,7 @@
         viewer.scene.globe.depthTestAgainstTerrain = true;
 
         // 1) Capa del barrio
-        const barrio = await Cesium.GeoJsonDataSource.load("BosquePopular/construcciones.geojson", {
+        const barrio = await Cesium.GeoJsonDataSource.load("construcciones.geojson", {
             clampToGround: true
         });
         viewer.dataSources.add(barrio);
@@ -187,7 +187,7 @@
         await viewer.flyTo(barrio);
 
         // 2) PREDIOS: extrusión
-        const predios = await Cesium.GeoJsonDataSource.load("BosquePopular/construcciones.geojson");
+        const predios = await Cesium.GeoJsonDataSource.load("construcciones.geojson");
         viewer.dataSources.add(predios);
 
         for (const e of predios.entities.values) {
