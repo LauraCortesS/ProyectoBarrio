@@ -166,16 +166,6 @@
         viewer.scene.globe.depthTestAgainstTerrain = true;
 
         async function loadData() {
-            // Capa del barrio
-            const barrio = await Cesium.GeoJsonDataSource.load("construcciones.geojson", { clampToGround: true });
-            viewer.dataSources.add(barrio);
-            barrio.entities.values.forEach(e => {
-                if (!e.polygon) return;
-                e.polygon.material = Cesium.Color.fromCssColorString("#1e88e5").withAlpha(0.25);
-                e.polygon.outline = true;
-                e.polygon.outlineColor = Cesium.Color.fromCssColorString("#0d47a1");
-            });
-
             // PREDIOS extruidos
             const predios = await Cesium.GeoJsonDataSource.load("construcciones.geojson");
             viewer.dataSources.add(predios);
