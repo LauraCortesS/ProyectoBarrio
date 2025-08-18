@@ -173,8 +173,8 @@
 
         <!-- Descripción -->
         <div class="description">
-            <h2>Descripción del Polígono</h2>
-            <p>Haz clic en un polígono del mapa para ver más información sobre el parque.</p>
+            <h2>Movilidad</h2>
+            <p>Haz clic en un paradero del SITP, Ruta zonales y trazados locales del Transmilenio que se encuentra en el mapa para ver más información.</p>
         </div>
     </div>
 
@@ -190,7 +190,23 @@
         }).addTo(map);
 
         // Cargar GeoJSON
-        fetch('Paraderos_Zonales_del_SITP.geojson')
+        fetch('Trazados_Troncales_de_TRANSMILENIO.geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    onEachFeature: function (feature, layer) {
+                        layer.on('click', function () {
+                            document.querySelector('.description').innerHTML = `
+                                <h2>${feature.properties.nombre}</h2>
+                                <p>${feature.properties.descripcion}</p>
+                            `;
+                        });
+                    }
+                }).addTo(map);
+            });
+        
+        // Cargar GeoJSON
+        fetch('Rutas_Zonales_SITP.geojson')
             .then(response => response.json())
             .then(data => {
                 L.geoJSON(data, {
