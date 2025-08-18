@@ -14,14 +14,13 @@
             height: 100vh;
         }
 
-        /* Estilos del encabezado */
         header {
             display: flex;
             align-items: center;
             background-color: #0D0D0D;
             color: white;
             padding: 5px 30px;
-            z-index: 1001; /* Encabezado por encima */
+            z-index: 1001;
         }
 
         .logo-container {
@@ -38,22 +37,20 @@
             margin-left: 20px;
         }
 
-        /* Barra de filtros */
         .filters-bar {
             background-color: #333333;
             display: flex;
             justify-content: center;
             padding: 10px 0;
             position: relative;
-            z-index: 1001; /* Barra siempre sobre el mapa */
+            z-index: 1001;
         }
 
         .filter {
             margin: 0 15px;
-            position: relative; /* Necesario para dropdown */
+            position: relative;
         }
 
-        /* Botón desplegable */
         .dropbtn {
             background-color: #555555;
             color: white;
@@ -68,7 +65,6 @@
             background-color: #777777;
         }
 
-        /* Contenedor del menú */
         .dropdown-content {
             display: none;
             position: absolute;
@@ -76,10 +72,9 @@
             min-width: 160px;
             box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
             border-radius: 4px;
-            z-index: 9999; /* 👈 Fuerza sobre el mapa */
+            z-index: 9999;
         }
 
-        /* Opciones dentro del menú */
         .dropdown-content a {
             color: black;
             padding: 10px 14px;
@@ -91,45 +86,31 @@
             background-color: #ddd;
         }
 
-        /* Mostrar menú al pasar el mouse */
         .filter:hover .dropdown-content {
             display: block;
         }
 
-        /* Mapa */
         #map {
-            flex: 2; 
+            flex: 2;
             height: 100%;
         }
 
-        /* Descripción */
         .description {
-            flex: 1; 
+            flex: 1;
             padding: 20px;
             background-color: #f4f4f4;
             overflow-y: auto;
             border-left: 1px solid #ccc;
         }
 
-        /* Contenedor de mapa y descripción */
         .container {
             display: flex;
-            height: calc(100vh - 120px); /* Resta header y barra */
-        }
-
-        button {
-            padding: 8px 16px;
-            font-size: 14px;
-            background-color: #444444;
-            color: white;
-            border: none;
-            cursor: pointer;
+            height: calc(100vh - 120px);
         }
     </style>
 </head>
 <body>
 
-    <!-- Encabezado -->
     <header>
         <div class="logo-container">
             <img src="imagenes/mapa.png" alt="Logo">
@@ -137,9 +118,7 @@
         <h1>Bosque Popular</h1>
     </header>
 
-    <!-- Barra de Filtros -->
     <div class="filters-bar">
-        <!-- Dropdown de Equipamientos -->
         <div class="filter">
             <button class="dropbtn">Equipamientos</button>
             <div class="dropdown-content">
@@ -166,85 +145,63 @@
         </div>
     </div>
 
-    <!-- Contenedor para el mapa y la descripción -->
     <div class="container">
-        <!-- Mapa Leaflet -->
         <div id="map"></div>
+    </div>
 
-    <!-- Scripts de Leaflet -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        // Crear el mapa
         const map = L.map('map').setView([4.670473643688381, -74.09632602920297], 17);
 
-        // Agregar capa de mapa
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // Cargar GeoJSON
-        fetch('Trazados_Troncales_de_TRANSMILENIO.geojson')
-            .then(response => response.json())
-            .then(data => {
-                L.geoJSON(data, {
-                    onEachFeature: function (feature, layer) {
-                        layer.on('click', function () {
-                            document.querySelector('.description').innerHTML = `
-                                <h2>${feature.properties.nombre}</h2>
-                                <p>${feature.properties.descripcion}</p>
-                            `;
-                        });
-                    }
-                }).addTo(map);
-            });
-        
-        // Cargar GeoJSON
-         // Función para cargar y mostrar GeoJSON
-    function addGeoJson(url, color, name) {
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                L.geoJSON(data, {
-                    style: {
-                        color: color,
-                        weight: 3,
-                        opacity: 0.8
-                    },
-                    onEachFeature: function (feature, layer) {
-                        let info = '';
-                        if (feature.properties.nombre) {
-                            info = `<h3>${feature.properties.nombre}</h3>`;
-                        } else if (feature.properties.abreviatura_destino_zona_sitp) {
-                            info = `<h3>Zona SITP: ${feature.properties.abreviatura_destino_zona_sitp}</h3>`;
-                        } else if (feature.properties.id_trazado_troncal) {
-                            info = `<h3>Trazado: ${feature.properties.id_trazado_troncal}</h3>`;
+        // Función para cargar GeoJSON
+        function addGeoJson(url, color, name) {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}: ${url}`);
+                    return response.json();
+                })
+                .then(data => {
+                    L.geoJSON(data, {
+                        style: {
+                            color: color,
+                            weight: 3,
+                            opacity: 0.8
+                        },
+                        onEachFeature: function (feature, layer) {
+                            let info = '';
+                            if (feature.properties.nombre) {
+                                info = `<h3>${feature.properties.nombre}</h3>`;
+                            } else if (feature.properties.abreviatura_destino_zona_sitp) {
+                                info = `<h3>Zona SITP: ${feature.properties.abreviatura_destino_zona_sitp}</h3>`;
+                            } else if (feature.properties.id_trazado_troncal) {
+                                info = `<h3>Trazado: ${feature.properties.id_trazado_troncal}</h3>`;
+                            }
+
+                            if (feature.properties.descripcion) {
+                                info += `<p>${feature.properties.descripcion}</p>`;
+                            } else {
+                                info += '<p>No hay descripción disponible.</p>';
+                            }
+
+                            layer.on('click', function () {
+                                document.querySelector('.description').innerHTML = info;
+                            });
+
+                            layer.bindPopup(info);
                         }
+                    }).addTo(map);
+                })
+                .catch(err => console.error("Error cargando archivo:", url, err));
+        }
 
-                        // Mostrar descripción si existe
-                        if (feature.properties.descripcion) {
-                            info += `<p>${feature.properties.descripcion}</p>`;
-                        } else {
-                            info += '<p>No hay descripción disponible.</p>';
-                        }
-
-                        layer.on('click', function () {
-                            document.querySelector('.description').innerHTML = info;
-                        });
-
-                        // Opcional: agregar popup al pasar el mouse
-                        layer.bindPopup(info);
-                    }
-                }).addTo(map);
-            })
-            .catch(err => console.error("Error cargando archivo:", url, err));
-    }
-
-    // Cargar los tres archivos GeoJSON
-    addGeoJson('./Rutas_Zonales_SITP.geojson', '#E6654E', 'Troncales TransMilenio');
-    addGeoJson('./Rutas_Zonales_SITP.geojson', '#6346E5', 'Rutas Zonales SITP');
-    addGeoJson('./Paraderos_Zonales_del_SITP.geojson', '#6E9EE6', 'Paraderos Zonales SITP');
-
+        // Cargar los tres archivos GeoJSON
+        addGeoJson('./Trazados_Troncales_de_TRANSMILENIO.geojson', '#E6654E', 'Troncales TransMilenio');
+        addGeoJson('./Rutas_Zonales_SITP.geojson', '#6346E5', 'Rutas Zonales SITP');
+        addGeoJson('./Paraderos_Zonales_del_SITP.geojson', '#6E9EE6', 'Paraderos Zonales SITP');
     </script>
-
 </body>
 </html>
