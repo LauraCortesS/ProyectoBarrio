@@ -104,9 +104,8 @@
 
         /* Contenedor del visor */
         #cesiumContainer {
-            flex: 1;       /* Ocupa el espacio restante */
             width: 100%;
-            height: auto;  /* Se ajusta con flex */
+            height: 100%;
         }
     </style>
 
@@ -159,85 +158,88 @@
     <!-- Script de Cesium -->
     <script type="module">
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZjBjZWNjNi1lN2E2LTQxN2EtOWY2MS0xZjliMjIxMDZmMzUiLCJpZCI6MzMxMzU3LCJpYXQiOjE3NTUwNDI1NTB9.CLqrLXgbk4VfneVH0NK8xmkyEll98A0whFdesGkvMTo';
-
+    
         const viewer = new Cesium.Viewer("cesiumContainer", {
-            terrain: Cesium.Terrain.fromWorldTerrain(),
-            baseLayer: Cesium.ImageryLayer.fromProviderAsync(
-                Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
-                    Cesium.ArcGisBaseMapType.SATELLITE
-                )
-            ),
-            timeline: false,
-            animation: false,
-            shadows: true
+          terrain: Cesium.Terrain.fromWorldTerrain(),
+          baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+            Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
+              Cesium.ArcGisBaseMapType.SATELLITE
+            )
+          ),
+          timeline: false,
+          animation: false,
+          shadows: true
         });
         viewer.scene.globe.depthTestAgainstTerrain = true;
-
-        // 1) Capa del barrio
+    
+        // 1) Capa del barrio: SOLO para ubicar/recortar (sin extrusión)
         const barrio = await Cesium.GeoJsonDataSource.load("construcciones.geojson", {
-            clampToGround: true
+          clampToGround: true
         });
         viewer.dataSources.add(barrio);
         for (const e of barrio.entities.values) {
-            if (!e.polygon) continue;
-            e.polygon.material = Cesium.Color.fromCssColorString("#1e88e5").withAlpha(0.25);
-            e.polygon.outline = true;
-            e.polygon.outlineColor = Cesium.Color.fromCssColorString("#0d47a1");
+          if (!e.polygon) continue;
+          e.polygon.material = Cesium.Color.fromCssColorString("#1e88e5").withAlpha(0.25);
+          e.polygon.outline = true;
+          e.polygon.outlineColor = Cesium.Color.fromCssColorString("#0d47a1");
         }
         await viewer.flyTo(barrio);
-
-        // 2) PREDIOS: extrusión
-        const predios = await Cesium.GeoJsonDataSource.load("construcciones.geojson");
+    
+        // 2) PREDIOS: extrusión con los atributos correctos
+        // Cambiar la ruta del GeoJSON y los atributos de altura y pisos
+        const predios = await Cesium.GeoJsonDataSource.load("construcciones.geojson", {
+          // importante: SIN clampToGround si vas a extruir
+        });
         viewer.dataSources.add(predios);
-
+    
         for (const e of predios.entities.values) {
-            const pol = e.polygon;
-            if (!pol) continue;
-
-            const props = e.properties || {};
-            const hasAltura = props.CONELEVACI && !isNaN(+props.CONELEVACI.getValue?.());
-            const hasPisos = props.CONNPISOS && !isNaN(+props.CONNPISOS.getValue?.());
-            const altura = hasAltura ? +props.CONELEVACI.getValue()
-                          : hasPisos  ? +props.CONNPISOS.getValue() * 3
-                                      : 6;
-
-            pol.material = Cesium.Color.fromCssColorString("#7a8a50").withAlpha(0.95);
-            pol.outline = true;
-            pol.outlineColor = Cesium.Color.BLACK;
-
-            pol.heightReference = Cesium.HeightReference.CLAMP_TO_GROUND;
-            pol.extrudedHeight = altura;
-            pol.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+          const pol = e.polygon;
+          if (!pol) continue;
+    
+          const props = e.properties || {};
+          const hasAltura = props.CONELEVACI && !isNaN(+props.CONELEVACI.getValue?.());
+          const hasPisos = props.CONNPISOS && !isNaN(+props.CONNPISOS.getValue?.());
+          const altura = hasAltura ? +props.CONELEVACI.getValue()
+                        : hasPisos  ? +props.CONNPISOS.getValue() * 3   // 3 m por piso
+                                    : 6;
+    
+          pol.material = Cesium.Color.fromCssColorString("#7a8a50").withAlpha(0.95);
+          pol.outline = true;
+          pol.outlineColor = Cesium.Color.BLACK;
+    
+          pol.heightReference = Cesium.HeightReference.CLAMP_TO_GROUND;
+          pol.extrudedHeight = altura; // en metros
+          pol.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
         }
-
-        // 3) Edificios OSM recortados a la zona del barrio
+    
+        // 3) (Opcional) Edificios OSM recortados a la zona del barrio
         const osm = await Cesium.createOsmBuildingsAsync();
         viewer.scene.primitives.add(osm);
-
+    
+        // Recorta OSM a la envolvente del polígono del barrio
         const poly = barrio.entities.values.find(e => e.polygon)?.polygon;
         if (poly) {
-            const positions = poly.hierarchy.getValue().positions;
-            const toDeg = (c) => {
-                const carto = Cesium.Ellipsoid.WGS84.cartesianToCartographic(c);
-                return { lon: Cesium.Math.toDegrees(carto.longitude), lat: Cesium.Math.toDegrees(carto.latitude) };
-            };
-            let west = 180, south = 90, east = -180, north = -90;
-            positions.map(toDeg).forEach(({ lon, lat }) => {
-                west = Math.min(west, lon);
-                east = Math.max(east, lon);
-                south = Math.min(south, lat);
-                north = Math.max(north, lat);
-            });
-            const rect = Cesium.Rectangle.fromDegrees(west, south, east, north);
-            osm.clippingPlanes = Cesium.ClippingPlaneCollection.fromBoundingRectangle(rect, {
-                unionClippingRegions: true,
-                edgeWidth: 0.0
-            });
+          const positions = poly.hierarchy.getValue().positions;
+          const toDeg = (c) => {
+            const carto = Cesium.Ellipsoid.WGS84.cartesianToCartographic(c);
+            return { lon: Cesium.Math.toDegrees(carto.longitude), lat: Cesium.Math.toDegrees(carto.latitude) };
+          };
+          let west = 180, south = 90, east = -180, north = -90;
+          positions.map(toDeg).forEach(({ lon, lat }) => {
+            west = Math.min(west, lon);
+            east = Math.max(east, lon);
+            south = Math.min(south, lat);
+            north = Math.max(north, lat);
+          });
+          const rect = Cesium.Rectangle.fromDegrees(west, south, east, north);
+          osm.clippingPlanes = Cesium.ClippingPlaneCollection.fromBoundingRectangle(rect, {
+            unionClippingRegions: true,
+            edgeWidth: 0.0
+          });
         }
-
-        // 4) Cámara inicial
-        viewer.camera.flyTo({
-            destination: Cesium.Cartesian3.fromDegrees(-74.17653, 4.59027, 2600),
+    
+        viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(-74.09632602920297, 4.670473643688381, 400),
             orientation: { heading: 0, pitch: Cesium.Math.toRadians(-25) }
         });
     </script>
