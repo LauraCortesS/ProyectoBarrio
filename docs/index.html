@@ -25,15 +25,15 @@
         }
 
         header img {
-            height: 35px; /* Ajusta el tamaño del logo */
+            height: 35px;
         }
 
         h1 {
             font-size: 20px;
-            margin-left: 20px; /* Espaciado configurable entre el logo y el título */
+            margin-left: 20px;
         }
 
-        /* Estilos para la barra de filtros */
+        /* Barra de filtros */
         .filters-bar {
             background-color: #333333;
             display: flex;
@@ -42,48 +42,73 @@
         }
 
         .filter {
-            margin: 0 15px; /* Espaciado entre los filtros */
+            margin: 0 15px;
+            position: relative; /* Importante para el dropdown */
         }
 
-        select {
-            padding: 5px;
-            font-size: 16px;
+        /* Botón desplegable */
+        .dropbtn {
             background-color: #555555;
             color: white;
-            border: 1px solid #333;
+            padding: 8px 16px;
+            font-size: 16px;
+            border: none;
             border-radius: 4px;
+            cursor: pointer;
         }
 
-        /* Estilos para la imagen de portada */
+        .dropbtn:hover {
+            background-color: #777777;
+        }
+
+        /* Contenedor del menú */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 1;
+        }
+
+        /* Opciones dentro del menú */
+        .dropdown-content a {
+            color: black;
+            padding: 10px 14px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+
+        /* Mostrar menú al hacer hover */
+        .filter:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Imagen de portada */
         .hero-image {
-            width: 100%; /* Ocupa todo el ancho de la pantalla */
-            height: 820px; /* Puedes ajustar la altura según lo necesites */
-            background-image: url('imagenes/portadabarrio.jpg'); /* Ruta de la imagen */
-            background-position: center; /* Centra la imagen */
-            background-size: cover; /* Asegura que la imagen cubra todo el contenedor */
+            width: 100%;
+            height: 820px;
+            background-image: url('imagenes/portadabarrio.jpg');
+            background-position: center;
+            background-size: cover;
             background-repeat: no-repeat;
-            position: relative; /* Permite que el título se posicione sobre la imagen */
+            position: relative;
         }
 
-        /* Título encima de la imagen */
         .hero-title {
             position: absolute;
-            top: 50%; /* Centra el título verticalmente */
-            left: 50%; /* Centra el título horizontalmente */
-            transform: translate(-50%, -50%); /* Ajusta el desplazamiento para el centro perfecto */
-            color: white; /* Color del texto */
-            font-size: 85px; /* Tamaño del texto */
-            font-weight: bold; /* Grosor del texto */
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); /* Sombra suavizada */
-        }
-
-                button {
-            padding: 8px 16px;
-            font-size: 14px;
-            background-color: #444444;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             color: white;
-            border: none;
-            cursor: pointer;
+            font-size: 85px;
+            font-weight: bold;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
         }
     </style>
 </head>
@@ -99,22 +124,30 @@
 
     <!-- Barra de Filtros -->
     <div class="filters-bar">
+        <!-- Dropdown de Equipamientos -->
         <div class="filter">
-            <select>
-                <option value="">Equipamientos</option>
-                <!-- Opciones futuras aquí -->
-            </select>
+            <button class="dropbtn">Equipamientos</button>
+            <div class="dropdown-content">
+                <a href="parques.html">Parques</a>
+                <a href="movilidad.html">Movilidad</a>
+                <a href="vias.html">Vías</a>
+            </div>
         </div>
+
         <div class="filter">
-            <select>
-                <option value="">Problemáticas</option>
-                <!-- Opciones futuras aquí -->
-            </select>
+            <button class="dropbtn">Problemáticas</button>
+            <div class="dropdown-content">
+                <a href="calidadaire.html">Calidad del aire</a>
+            </div>
         </div>
+
         <div class="filter">
-            <a href="acerca-de-mi.html">
-                <button>Acerca de mí</button>
-            </a>
+            <button class="dropbtn">Acerca de mí</button>
+            <div class="dropdown-content">
+                <a href="descripcion.html">Descripción</a>
+                <a href="ubicacion.html">Ubicación</a>
+                <a href="catastro3d.html">Catastro 3D</a>
+            </div>
         </div>
     </div>
 
