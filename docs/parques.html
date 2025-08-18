@@ -76,7 +76,7 @@
             min-width: 160px;
             box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
             border-radius: 4px;
-            z-index: 9999; /* 👈 Fuerza sobre el mapa */
+            z-index: 9999; 
         }
 
         /* Opciones dentro del menú */
@@ -218,9 +218,9 @@
             }
         };
     
-        // 🌳 Ícono de árbol verde
+        // 🌳 Ícono de árbol (local)
         const treeIcon = L.icon({
-            iconUrl: "https://cdn-icons-png.flaticon.com/512/427/427735.png",
+            iconUrl: "imagenes/tree.png",  // 👈 tu archivo local
             iconSize: [32, 32],
             iconAnchor: [16, 32]
         });
@@ -242,7 +242,7 @@
         // Variables globales
         let capaSeleccionada = null;
         let marcadorSeleccionado = null;
-        let geojsonLayer; // 👈 ahora es global
+        let geojsonLayer;
     
         // Cargar el GeoJSON
         fetch('parques.geojson')
@@ -250,7 +250,7 @@
             .then(data => {
                 geojsonLayer = L.geoJSON(data, {
                     style: {
-                        color: "blue",
+                        color: "green",
                         weight: 2,
                         fillColor: "transparent",
                         fillOpacity: 0.3
@@ -259,10 +259,13 @@
                         const nombre = feature.properties.nombre;
                         const centroide = layer.getBounds().getCenter();
     
-                        // Crear marcador
+                        // Crear marcador con su posición base
                         const marker = L.marker(centroide, { icon: treeIcon })
                             .addTo(map)
                             .on('click', () => seleccionarParque(layer, marker, nombre));
+    
+                        // Guardar posición base para que no se pierda
+                        marker._baseLatLng = centroide;
     
                         // Tooltip en hover
                         layer.bindTooltip(nombre, { permanent: false, sticky: true });
@@ -288,8 +291,8 @@
     
             // Resaltar polígono
             layer.setStyle({
-                color: "green",
-                fillColor: "lightgreen",
+                color: "cyan",
+                fillColor: "transparent",
                 fillOpacity: 0.6
             });
     
@@ -297,8 +300,8 @@
             capaSeleccionada = layer;
             marcadorSeleccionado = marker;
     
-            // Animar marcador (salto infinito)
-            let baseLatLng = marker.getLatLng();
+            // Animar marcador (salto infinito) desde la posición base
+            let baseLatLng = marker._baseLatLng;
             let offset = 0;
             let direction = 1;
             let anim = setInterval(() => {
@@ -321,12 +324,13 @@
                 capaSeleccionada = null;
             }
             if (marcadorSeleccionado) {
-                clearInterval(marcadorSeleccionado._anim); // 👈 detener animación
-                marcadorSeleccionado.setLatLng(marcadorSeleccionado.getLatLng()); // volver al lugar original
+                clearInterval(marcadorSeleccionado._anim); // detener animación
+                marcadorSeleccionado.setLatLng(marcadorSeleccionado._baseLatLng); // volver exactamente a la base
                 marcadorSeleccionado = null;
             }
         }
     </script>
+    
     
 </body>
 </html>
