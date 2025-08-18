@@ -102,6 +102,11 @@
             height: 100%;
         }
 
+        /* 🔹 Evitar que los polígonos muestren recuadro negro al hacer clic */
+        .leaflet-interactive:focus {
+            outline: none !important;
+        }
+
         /* Descripción */
         .description {
             flex: 1; 
@@ -173,8 +178,9 @@
 
         <!-- Descripción -->
         <div class="description">
-            <h2>Descripción del Polígono</h2>
-            <p>Haz clic en un polígono del mapa para ver más información sobre el parque.</p>
+            <h2>Parques</h2>
+            <p>El barrio Bosque Popular cuenta con tres parques vecinales: El Trébol, La Estrella del Sur y Bosque Popular. </p>
+            <p>Haga click sobre cada parque para obtener más información. </p>
         </div>
     </div>
 
@@ -183,28 +189,144 @@
     <script>
         // Crear el mapa
         const map = L.map('map').setView([4.670473643688381, -74.09632602920297], 17);
-
-        // Agregar capa de mapa
+    
+        // Agregar capa de mapa base
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
-
-        // Cargar GeoJSON
+    
+        // Descripción general
+        const descripcionGeneral = `
+            <h2>Parques</h2>
+            <p>El barrio Bosque Popular cuenta con tres parques vecinales: El Trébol, La Estrella del Sur y Bosque Popular.</p>
+            <p>Haga click sobre cada parque para obtener más información.</p>
+        `;
+    
+        // Diccionario con descripciones e imágenes
+        const parquesInfo = {
+            "Parque El Trébol": {
+                descripcion: "Este parque es un punto de encuentro comunitario con zonas verdes y juegos infantiles.",
+                imagen: "imagenes/PElTrebol.jpg"
+            },
+            "Parque La Estrella del Sur": {
+                descripcion: "Un parque vecinal con amplias zonas deportivas y espacios de recreación.",
+                imagen: "imagenes/PLaEstrellaDelSur.jpg"
+            },
+            "Parque Bosque Popular": {
+                descripcion: "El parque más grande del barrio, rodeado de árboles y senderos para caminar.",
+                imagen: "imagenes/PBosquePopular.jpg"
+            }
+        };
+    
+        // 🌳 Ícono de árbol verde
+        const treeIcon = L.icon({
+            iconUrl: "https://cdn-icons-png.flaticon.com/512/427/427735.png",
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+        });
+    
+        // Función para actualizar descripción lateral
+        function actualizarDescripcion(nombre) {
+            const info = parquesInfo[nombre];
+            if (info) {
+                document.querySelector('.description').innerHTML = `
+                    <h2>${nombre}</h2>
+                    <p>${info.descripcion}</p>
+                    <img src="${info.imagen}" alt="${nombre}" style="width:100%;border-radius:8px;margin-top:10px;">
+                `;
+            } else {
+                document.querySelector('.description').innerHTML = descripcionGeneral;
+            }
+        }
+    
+        // Variables globales
+        let capaSeleccionada = null;
+        let marcadorSeleccionado = null;
+        let geojsonLayer; // 👈 ahora es global
+    
+        // Cargar el GeoJSON
         fetch('parques.geojson')
             .then(response => response.json())
             .then(data => {
-                L.geoJSON(data, {
+                geojsonLayer = L.geoJSON(data, {
+                    style: {
+                        color: "blue",
+                        weight: 2,
+                        fillColor: "transparent",
+                        fillOpacity: 0.3
+                    },
                     onEachFeature: function (feature, layer) {
-                        layer.on('click', function () {
-                            document.querySelector('.description').innerHTML = `
-                                <h2>${feature.properties.nombre}</h2>
-                                <p>${feature.properties.descripcion}</p>
-                            `;
-                        });
+                        const nombre = feature.properties.nombre;
+                        const centroide = layer.getBounds().getCenter();
+    
+                        // Crear marcador
+                        const marker = L.marker(centroide, { icon: treeIcon })
+                            .addTo(map)
+                            .on('click', () => seleccionarParque(layer, marker, nombre));
+    
+                        // Tooltip en hover
+                        layer.bindTooltip(nombre, { permanent: false, sticky: true });
+    
+                        // Click en polígono
+                        layer.on('click', () => seleccionarParque(layer, marker, nombre));
                     }
                 }).addTo(map);
+    
+                // Evento para clic fuera de polígonos → reset
+                map.on('click', function (e) {
+                    if (!e.originalEvent.target.closest('.leaflet-interactive')) {
+                        resetSeleccion();
+                        actualizarDescripcion(null);
+                    }
+                });
             });
+    
+        // Selección de parque
+        function seleccionarParque(layer, marker, nombre) {
+            // Resetear selección anterior
+            resetSeleccion();
+    
+            // Resaltar polígono
+            layer.setStyle({
+                color: "green",
+                fillColor: "lightgreen",
+                fillOpacity: 0.6
+            });
+    
+            // Guardar selección
+            capaSeleccionada = layer;
+            marcadorSeleccionado = marker;
+    
+            // Animar marcador (salto infinito)
+            let baseLatLng = marker.getLatLng();
+            let offset = 0;
+            let direction = 1;
+            let anim = setInterval(() => {
+                offset += 0.00005 * direction;
+                if (offset > 0.0003 || offset < 0) direction *= -1;
+                marker.setLatLng([baseLatLng.lat + offset, baseLatLng.lng]);
+            }, 50);
+    
+            // Guardar animación en marker
+            marker._anim = anim;
+    
+            // Actualizar descripción lateral
+            actualizarDescripcion(nombre);
+        }
+    
+        // Reset de selección
+        function resetSeleccion() {
+            if (capaSeleccionada) {
+                geojsonLayer.resetStyle(capaSeleccionada);
+                capaSeleccionada = null;
+            }
+            if (marcadorSeleccionado) {
+                clearInterval(marcadorSeleccionado._anim); // 👈 detener animación
+                marcadorSeleccionado.setLatLng(marcadorSeleccionado.getLatLng()); // volver al lugar original
+                marcadorSeleccionado = null;
+            }
+        }
     </script>
-
+    
 </body>
 </html>
