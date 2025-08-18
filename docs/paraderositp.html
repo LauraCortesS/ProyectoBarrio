@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página con Mapa Leaflet</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Estilos del encabezado */
+        header {
+            display: flex;
+            align-items: center;
+            background-color: #0D0D0D;
+            color: white;
+            padding: 5px 30px;
+            z-index: 1001; /* Encabezado por encima */
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        header img {
+            height: 35px;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-left: 20px;
+        }
+
+        /* Barra de filtros */
+        .filters-bar {
+            background-color: #333333;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+            position: relative;
+            z-index: 1001; /* Barra siempre sobre el mapa */
+        }
+
+        .filter {
+            margin: 0 15px;
+            position: relative; /* Necesario para dropdown */
+        }
+
+        /* Botón desplegable */
+        .dropbtn {
+            background-color: #555555;
+            color: white;
+            padding: 8px 16px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .dropbtn:hover {
+            background-color: #777777;
+        }
+
+        /* Contenedor del menú */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 9999; /* 👈 Fuerza sobre el mapa */
+        }
+
+        /* Opciones dentro del menú */
+        .dropdown-content a {
+            color: black;
+            padding: 10px 14px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+
+        /* Mostrar menú al pasar el mouse */
+        .filter:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Mapa */
+        #map {
+            flex: 2; 
+            height: 100%;
+        }
+
+        /* Descripción */
+        .description {
+            flex: 1; 
+            padding: 20px;
+            background-color: #f4f4f4;
+            overflow-y: auto;
+            border-left: 1px solid #ccc;
+        }
+
+        /* Contenedor de mapa y descripción */
+        .container {
+            display: flex;
+            height: calc(100vh - 120px); /* Resta header y barra */
+        }
+
+        button {
+            padding: 8px 16px;
+            font-size: 14px;
+            background-color: #444444;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Encabezado -->
+    <header>
+        <div class="logo-container">
+            <img src="imagenes/mapa.png" alt="Logo">
+        </div>
+        <h1>Bosque Popular</h1>
+    </header>
+
+    <!-- Barra de Filtros -->
+    <div class="filters-bar">
+        <!-- Dropdown de Equipamientos -->
+        <div class="filter">
+            <button class="dropbtn">Equipamientos</button>
+            <div class="dropdown-content">
+                <a href="parques.html">Parques</a>
+                <a href="movilidad.html">Movilidad</a>
+                <a href="vias.html">Vías</a>
+            </div>
+        </div>
+
+        <div class="filter">
+            <button class="dropbtn">Problemáticas</button>
+            <div class="dropdown-content">
+                <a href="calidadaire.html">Calidad del aire</a>
+            </div>
+        </div>
+
+        <div class="filter">
+            <button class="dropbtn">Acerca de mí</button>
+            <div class="dropdown-content">
+                <a href="descripcion.html">Descripción</a>
+                <a href="ubicacion.html">Ubicación</a>
+                <a href="catastro3d.html">Catastro 3D</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor para el mapa y la descripción -->
+    <div class="container">
+        <!-- Mapa Leaflet -->
+        <div id="map"></div>
+
+        <!-- Descripción -->
+        <div class="description">
+            <h2>Descripción del Polígono</h2>
+            <p>Haz clic en un polígono del mapa para ver más información sobre el parque.</p>
+        </div>
+    </div>
+
+    <!-- Scripts de Leaflet -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Crear el mapa
+        const map = L.map('map').setView([4.670473643688381, -74.09632602920297], 17);
+
+        // Agregar capa de mapa
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Cargar GeoJSON
+        fetch('Paraderos_Zonales_del_SITP.geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    onEachFeature: function (feature, layer) {
+                        layer.on('click', function () {
+                            document.querySelector('.description').innerHTML = `
+                                <h2>${feature.properties.nombre}</h2>
+                                <p>${feature.properties.descripcion}</p>
+                            `;
+                        });
+                    }
+                }).addTo(map);
+            });
+    </script>
+
+</body>
+</html>
