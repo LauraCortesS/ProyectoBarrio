@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vías Bosque Popular</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        crossorigin=""></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            background-color: #0D0D0D;
+            color: white;
+            padding: 5px 30px;
+        }
+        .logo-container img { height: 35px; }
+        h1 { font-size: 20px; margin-left: 20px; }
+
+        .map-container {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #map { height: 100%; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <a href="index.html">
+                <img src="imagenes/mapa.png" alt="Logo">
+            </a>
+        </div>
+        <h1>
+            <a href="index.html" style="text-decoration: none; color: white;">
+                Vías principales y secundarias - Bosque Popular
+            </a>
+        </h1>
+    </header>
+
+    <div class="map-container">
+        <div id="map"></div>
+    </div>
+
+    <script>
+        // Coordenadas del barrio Bosque Popular
+        const latitud = 4.6865;
+        const longitud = -74.1167;
+        const zoom = 15;
+
+        // Inicializar mapa
+        const map = L.map('map').setView([latitud, longitud], zoom);
+
+        // Capa base OSM
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Marcador del barrio
+        L.marker([latitud, longitud]).addTo(map)
+            .bindPopup('<b>Barrio Bosque Popular</b><br>Localidad de Engativá, Bogotá.')
+            .openPopup();
+
+        // === Consulta Overpass API ===
+        // Extraer vías primarias y secundarias en un radio de 1km alrededor del barrio
+        const overpassQuery = `
+            [out:json];
+            (
+              way["highway"~"primary|secondary|tertiary"](around:1000,${latitud},${longitud});
+            );
+            out geom;
+        `;
+
+        // Llamar a la API de Overpass
+        fetch("https://overpass-api.de/api/interpreter", {
+            method: "POST",
+            body: overpassQuery
+        })
+        .then(response => response.json())
+        .then(data => {
+            const geojson = osmtogeojson(data); // convertir OSM → GeoJSON
+            L.geoJSON(geojson, {
+                style: function (feature) {
+                    switch (feature.properties.tags.highway) {
+                        case 'primary': return {color: "red", weight: 4};
+                        case 'secondary': return {color: "blue", weight: 3};
+                        case 'tertiary': return {color: "green", weight: 2, dashArray: "5,5"};
+                        default: return {color: "gray"};
+                    }
+                }
+            }).addTo(map);
+        })
+        .catch(err => console.error(err));
+
+    </script>
+
+    <!-- Librería para convertir OSM JSON a GeoJSON -->
+    <script src="https://unpkg.com/osmtogeojson@3.0.0/osmtogeojson.js"></script>
+
+</body>
+</html>
