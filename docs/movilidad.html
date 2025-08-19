@@ -293,7 +293,6 @@ fetch('Rutas_Zonales_SITP.geojson')
 fetch('Paraderos_Zonales_del_SITP.geojson')
     .then(response => response.json())
     .then(data => {
-        // Definir estilo para paraderos
         L.geoJSON(data, {
             pointToLayer: function (feature, latlng) {
                 return L.circleMarker(latlng, {
@@ -306,22 +305,40 @@ fetch('Paraderos_Zonales_del_SITP.geojson')
                 });
             },
             onEachFeature: function (feature, layer) {
-                let info = '';
-                if (feature.properties.zona_sitp) {
-                    info = `<h3>Paradero: ${feature.properties.zona_sitp}</h3>`;
+                // Construir el contenido del popup
+                let info = '<div style="font-size: 14px;">';
+                
+                // Nombre del paradero (si existe)
+                if (feature.properties.nombre) {
+                    info += `<h3>${feature.properties.nombre}</h3>`;
                 } else {
-                    info = '<h3>Paradero SITP</h3>';
-                }
-                if (feature.properties.cenefa) {
-                    info += `<p>Código: ${feature.properties.cenefa}</p>`;
-                } else {
-                    info += '<p>No hay código disponible.</p>';
+                    info += '<h3>Paradero SITP</h3>';
                 }
 
+                // Código del paradero
+                if (feature.properties.cenefa) {
+                    info += `<p><strong>Código:</strong> ${feature.properties.cenefa}</p>`;
+                }
+
+                // Dirección
+                if (feature.properties.direccion_bandera) {
+                    info += `<p><strong>Dirección:</strong> ${feature.properties.direccion_bandera}</p>`;
+                }
+
+                // Localidad
+                if (feature.properties.localidad) {
+                    info += `<p><strong>Localidad:</strong> ${feature.properties.localidad}</p>`;
+                }
+
+                info += '</div>';
+
+                // Asignar popup
+                layer.bindPopup(info);
+
+                // Añadir interacción al clic
                 layer.on('click', function () {
                     alert(info);
                 });
-                layer.bindPopup(info);
             }
         }).addTo(map1);
     })
