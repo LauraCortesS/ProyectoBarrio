@@ -177,10 +177,54 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // Añadir un marcador con un mensaje emergente (popup)
-        L.marker([latitud, longitud]).addTo(map)
-            .bindPopup('<b>Barrio Bosque Popular</b><br>Localidad de Engativá, Bogotá.')
-            .openPopup();
+        // URL de la API de ArcGIS para la capa de barrios
+        const arcgisUrl = 'https://services.arcgis.com/P3eR9P4V312qG8w6/arcgis/rest/services/Localidad_y_Barrio/FeatureServer/1/query';
+
+        // Parámetros de la consulta para buscar el barrio por nombre
+        const params = {
+            where: "Nombre_Barrio = 'BOSQUE POPULAR'",
+            outFields: '*',
+            outSR: 4326,
+            f: 'geojson'
+        };
+
+        const queryString = new URLSearchParams(params).toString();
+        const fullUrl = `${arcgisUrl}?${queryString}`;
+
+        // Realizar la consulta a la API y cargar el polígono del barrio
+        fetch(fullUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al cargar los datos del barrio: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.features.length > 0) {
+                    const barrioLayer = L.geoJSON(data, {
+                        style: function (feature) {
+                            return {
+                                fillColor: '#48a8ff', // Color de relleno del polígono
+                                color: '#0078FF',     // Color del borde del polígono
+                                weight: 3,
+                                opacity: 0.8,
+                                fillOpacity: 0.2
+                            };
+                        },
+                        onEachFeature: function (feature, layer) {
+                            if (feature.properties && feature.properties.Nombre_Barrio) {
+                                layer.bindPopup('<b>Barrio:</b> ' + feature.properties.Nombre_Barrio);
+                            }
+                        }
+                    }).addTo(map);
+
+                    // Ajustar la vista del mapa para que se ajuste al polígono del barrio
+                    map.fitBounds(barrioLayer.getBounds());
+                } else {
+                    console.warn('No se encontró el polígono del barrio Bosque Popular.');
+                }
+            })
+            .catch(err => console.error('Error al obtener los datos del barrio:', err));
     </script>
 
 </body>
