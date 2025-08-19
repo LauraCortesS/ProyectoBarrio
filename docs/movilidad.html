@@ -265,13 +265,13 @@
                     },
                     onEachFeature: function (feature, layer) {
                         let info = '';
-                        if (feature.properties.abreviatura_destino_zona_sitp) {
-                            info = `<h3>Zona SITP: ${feature.properties.abreviatura_destino_zona_sitp}</h3>`;
+                        if (feature.properties.denominacion_ruta_zonal) {
+                            info = `<h3>Zona SITP: ${feature.properties.denominacion_ruta_zonal}</h3>`;
                         } else {
                             info = '<h3>Ruta SITP</h3>';
                         }
-                        if (feature.properties.descripcion) {
-                            info += `<p>${feature.properties.descripcion}</p>`;
+                        if (feature.properties.operador_ruta_zonal) {
+                            info += `<p>${feature.operador_ruta_zonal}</p>`;
                         } else {
                             info += '<p>No hay descripción disponible.</p>';
                         }
