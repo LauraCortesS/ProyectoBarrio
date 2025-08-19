@@ -109,23 +109,43 @@
             border-right: none;
         }
 
-        .map-box {
-            flex: 2;
-            height: 100%;
-        }
-
-        .description {
-            flex: 1;
-            padding: 20px;
-            background-color: #f4f4f4;
-            overflow-y: auto;
-            border-left: 1px solid #ccc;
-        }
-
         #map1, #map2 {
             width: 100%;
             height: 100%;
         }
+
+        /* Estilo para leyendas */
+        .legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .legend h4 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .legend li {
+            margin: 4px 0;
+        }
+
+        .legend span {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-right: 5px;
+            border-radius: 2px;
+        }
+
+        .legend .sitp { background-color: #6346E5; }
+        .legend .transmilenio { background-color: #E6654E; }
     </style>
 </head>
 <body>
@@ -167,23 +187,17 @@
         </div>
     </div>
 
-    <!-- Contenedor de los dos mapas -->
+    <!-- Contenedores de mapas -->
     <div class="maps-container">
 
         <!-- Mapa 1: Rutas Zonales SITP -->
         <div class="map-column">
-            <div id="map1" class="map-box"></div>
-            <div class="description" id="desc1">
-                <p>Haga clic en una ruta para ver detalles.</p>
-            </div>
+            <div id="map1"></div>
         </div>
 
         <!-- Mapa 2: Trazados Troncales TransMilenio -->
         <div class="map-column">
-            <div id="map2" class="map-box"></div>
-            <div class="description" id="desc2">
-                <p>Haga clic en un trazado para ver detalles.</p>
-            </div>
+            <div id="map2"></div>
         </div>
 
     </div>
@@ -197,7 +211,21 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map1);
 
-        // Cargar Rutas Zonales SITP
+        // Leyenda para Rutas SITP
+        const legendSITP = L.control({ position: 'topright' });
+        legendSITP.onAdd = function () {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <h4>Rutas Zonales SITP</h4>
+                <ul>
+                    <li><span class="sitp"></span> Rutas zonales</li>
+                </ul>
+            `;
+            return div;
+        };
+        legendSITP.addTo(map1);
+
+        // Cargar datos SITP
         fetch('./Rutas_Zonales_SITP.geojson')
             .then(response => response.json())
             .then(data => {
@@ -211,8 +239,6 @@
                         let info = '';
                         if (feature.properties.abreviatura_destino_zona_sitp) {
                             info = `<h3>Zona SITP: ${feature.properties.abreviatura_destino_zona_sitp}</h3>`;
-                        } else if (feature.properties.nombre) {
-                            info = `<h3>${feature.properties.nombre}</h3>`;
                         } else {
                             info = '<h3>Ruta SITP</h3>';
                         }
@@ -223,7 +249,7 @@
                         }
 
                         layer.on('click', function () {
-                            document.getElementById('desc1').innerHTML = info;
+                            alert(info); // O puedes usar un popup
                         });
                         layer.bindPopup(info);
                     }
@@ -231,14 +257,27 @@
             })
             .catch(err => console.error("Error cargando Rutas SITP:", err));
 
-
         // --- Mapa 2: Trazados Troncales TransMilenio ---
         const map2 = L.map('map2').setView([4.670473643688381, -74.09632602920297], 17);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map2);
 
-        // Cargar Trazados Troncales de TransMilenio
+        // Leyenda para TransMilenio
+        const legendTrans = L.control({ position: 'topright' });
+        legendTrans.onAdd = function () {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <h4>Trazados Troncales TransMilenio</h4>
+                <ul>
+                    <li><span class="transmilenio"></span> Trazados troncales</li>
+                </ul>
+            `;
+            return div;
+        };
+        legendTrans.addTo(map2);
+
+        // Cargar datos TransMilenio
         fetch('./Trazados_Troncales_de_TRANSMILENIO.geojson')
             .then(response => response.json())
             .then(data => {
@@ -264,7 +303,7 @@
                         }
 
                         layer.on('click', function () {
-                            document.getElementById('desc2').innerHTML = info;
+                            alert(info);
                         });
                         layer.bindPopup(info);
                     }
