@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página con Mapa Leaflet</title>
+    <title>Doble Vista - Movilidad</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         body {
@@ -14,6 +14,7 @@
             height: 100vh;
         }
 
+        /* Encabezado */
         header {
             display: flex;
             align-items: center;
@@ -37,6 +38,7 @@
             margin-left: 20px;
         }
 
+        /* Barra de filtros */
         .filters-bar {
             background-color: #333333;
             display: flex;
@@ -90,7 +92,24 @@
             display: block;
         }
 
-        #map {
+        /* Contenedor de los dos mapas */
+        .maps-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 120px);
+        }
+
+        .map-column {
+            display: flex;
+            flex: 1;
+            border-right: 1px solid #ccc;
+        }
+
+        .map-column:last-child {
+            border-right: none;
+        }
+
+        .map-box {
             flex: 2;
             height: 100%;
         }
@@ -103,21 +122,23 @@
             border-left: 1px solid #ccc;
         }
 
-        .container {
-            display: flex;
-            height: calc(100vh - 120px);
+        #map1, #map2 {
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
 <body>
 
+    <!-- Encabezado -->
     <header>
         <div class="logo-container">
             <img src="imagenes/mapa.png" alt="Logo">
         </div>
-        <h1>Bosque Popular</h1>
+        <h1>Bosque Popular - Doble Vista</h1>
     </header>
 
+    <!-- Barra de Filtros -->
     <div class="filters-bar">
         <div class="filter">
             <button class="dropbtn">Equipamientos</button>
@@ -125,6 +146,7 @@
                 <a href="parques.html">Parques</a>
                 <a href="movilidad.html">Movilidad</a>
                 <a href="vias.html">Vías</a>
+                <a href="doble-mapa.html" class="active">Doble Vista</a>
             </div>
         </div>
 
@@ -145,63 +167,110 @@
         </div>
     </div>
 
-    <div class="container">
-        <div id="map"></div>
+    <!-- Contenedor de los dos mapas -->
+    <div class="maps-container">
+
+        <!-- Mapa 1: Rutas Zonales SITP -->
+        <div class="map-column">
+            <div id="map1" class="map-box"></div>
+            <div class="description" id="desc1">
+                <p>Haga clic en una ruta para ver detalles.</p>
+            </div>
+        </div>
+
+        <!-- Mapa 2: Trazados Troncales TransMilenio -->
+        <div class="map-column">
+            <div id="map2" class="map-box"></div>
+            <div class="description" id="desc2">
+                <p>Haga clic en un trazado para ver detalles.</p>
+            </div>
+        </div>
+
     </div>
 
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        const map = L.map('map').setView([4.670473643688381, -74.09632602920297], 17);
-
+        // --- Mapa 1: Rutas Zonales SITP ---
+        const map1 = L.map('map1').setView([4.670473643688381, -74.09632602920297], 17);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+        }).addTo(map1);
 
-        // Función para cargar GeoJSON
-        function addGeoJson(url, color, name) {
-            fetch(url)
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP ${response.status}: ${url}`);
-                    return response.json();
-                })
-                .then(data => {
-                    L.geoJSON(data, {
-                        style: {
-                            color: color,
-                            weight: 3,
-                            opacity: 0.8
-                        },
-                        onEachFeature: function (feature, layer) {
-                            let info = '';
-                            if (feature.properties.nombre) {
-                                info = `<h3>${feature.properties.nombre}</h3>`;
-                            } else if (feature.properties.abreviatura_destino_zona_sitp) {
-                                info = `<h3>Zona SITP: ${feature.properties.abreviatura_destino_zona_sitp}</h3>`;
-                            } else if (feature.properties.id_trazado_troncal) {
-                                info = `<h3>Trazado: ${feature.properties.id_trazado_troncal}</h3>`;
-                            }
-
-                            if (feature.properties.descripcion) {
-                                info += `<p>${feature.properties.descripcion}</p>`;
-                            } else {
-                                info += '<p>No hay descripción disponible.</p>';
-                            }
-
-                            layer.on('click', function () {
-                                document.querySelector('.description').innerHTML = info;
-                            });
-
-                            layer.bindPopup(info);
+        // Cargar Rutas Zonales SITP
+        fetch('./Rutas_Zonales_SITP.geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: {
+                        color: '#6346E5',
+                        weight: 3,
+                        opacity: 0.8
+                    },
+                    onEachFeature: function (feature, layer) {
+                        let info = '';
+                        if (feature.properties.abreviatura_destino_zona_sitp) {
+                            info = `<h3>Zona SITP: ${feature.properties.abreviatura_destino_zona_sitp}</h3>`;
+                        } else if (feature.properties.nombre) {
+                            info = `<h3>${feature.properties.nombre}</h3>`;
+                        } else {
+                            info = '<h3>Ruta SITP</h3>';
                         }
-                    }).addTo(map);
-                })
-                .catch(err => console.error("Error cargando archivo:", url, err));
-        }
+                        if (feature.properties.descripcion) {
+                            info += `<p>${feature.properties.descripcion}</p>`;
+                        } else {
+                            info += '<p>No hay descripción disponible.</p>';
+                        }
 
-        // Cargar los tres archivos GeoJSON
-        addGeoJson('Trazados_Troncales_de_TRANSMILENIO.geojson', '#E6654E', 'Troncales TransMilenio');
-        addGeoJson('Rutas_Zonales_SITP.geojson', '#6346E5', 'Rutas Zonales SITP');
-        addGeoJson('Paraderos_Zonales_del_SITP.geojson', '#6E9EE6', 'Paraderos Zonales SITP');
+                        layer.on('click', function () {
+                            document.getElementById('desc1').innerHTML = info;
+                        });
+                        layer.bindPopup(info);
+                    }
+                }).addTo(map1);
+            })
+            .catch(err => console.error("Error cargando Rutas SITP:", err));
+
+
+        // --- Mapa 2: Trazados Troncales TransMilenio ---
+        const map2 = L.map('map2').setView([4.670473643688381, -74.09632602920297], 17);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map2);
+
+        // Cargar Trazados Troncales de TransMilenio
+        fetch('./Trazados_Troncales_de_TRANSMILENIO.geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: {
+                        color: '#E6654E',
+                        weight: 4,
+                        opacity: 0.9
+                    },
+                    onEachFeature: function (feature, layer) {
+                        let info = '';
+                        if (feature.properties.nombre) {
+                            info = `<h3>${feature.properties.nombre}</h3>`;
+                        } else if (feature.properties.id_trazado_troncal) {
+                            info = `<h3>Trazado: ${feature.properties.id_trazado_troncal}</h3>`;
+                        } else {
+                            info = '<h3>Trazado TransMilenio</h3>';
+                        }
+                        if (feature.properties.descripcion) {
+                            info += `<p>${feature.properties.descripcion}</p>`;
+                        } else {
+                            info += '<p>No hay descripción disponible.</p>';
+                        }
+
+                        layer.on('click', function () {
+                            document.getElementById('desc2').innerHTML = info;
+                        });
+                        layer.bindPopup(info);
+                    }
+                }).addTo(map2);
+            })
+            .catch(err => console.error("Error cargando TransMilenio:", err));
     </script>
 </body>
 </html>
