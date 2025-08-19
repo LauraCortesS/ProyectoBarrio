@@ -236,113 +236,100 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
+
        // --- Mapa 1: Rutas Zonales SITP + Paraderos ---
-const map1 = L.map('map1').setView([4.670473643688381, -74.09632602920297], 17);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(map1);
-
-// Leyenda para Rutas SITP y Paraderos
-const legendSITP = L.control({ position: 'topright' });
-legendSITP.onAdd = function () {
-    const div = L.DomUtil.create('div', 'legend');
-    div.innerHTML = `
-        <h4>Rutas Zonales SITP</h4>
-        <ul>
-            <li><span class="sitp"></span> Rutas zonales</li>
-            <li><span class="paradero"></span> Paraderos zonales</li>
-        </ul>
-    `;
-    return div;
-};
-legendSITP.addTo(map1);
-
-// Cargar Rutas Zonales SITP
-fetch('Rutas_Zonales_SITP.geojson')
-    .then(response => response.json())
-    .then(data => {
-        L.geoJSON(data, {
-            style: {
-                color: '#6346E5',
-                weight: 3,
-                opacity: 0.8
-            },
-            onEachFeature: function (feature, layer) {
-                let info = '';
-                if (feature.properties.abreviatura_destino_zona_sitp) {
-                    info = `<h3>Zona SITP: ${feature.properties.abreviatura_destino_zona_sitp}</h3>`;
-                } else {
-                    info = '<h3>Ruta SITP</h3>';
-                }
-                if (feature.properties.descripcion) {
-                    info += `<p>${feature.properties.descripcion}</p>`;
-                } else {
-                    info += '<p>No hay descripción disponible.</p>';
-                }
-
-                layer.on('click', function () {
-                    alert(info);
-                });
-                layer.bindPopup(info);
-            }
+        const map1 = L.map('map1').setView([4.670473643688381, -74.09632602920297], 17);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map1);
-    })
-    .catch(err => console.error("Error cargando Rutas SITP:", err));
 
-// Cargar Paraderos Zonales del SITP
-fetch('Paraderos_Zonales_del_SITP.geojson')
-    .then(response => response.json())
-    .then(data => {
-        L.geoJSON(data, {
-            pointToLayer: function (feature, latlng) {
-                return L.circleMarker(latlng, {
-                    radius: 6,
-                    fillColor: '#6E9EE6',
-                    color: '#000',
-                    weight: 1,
-                    opacity: 1,
-                    fillOpacity: 0.8
-                });
-            },
-            onEachFeature: function (feature, layer) {
-                // Construir el contenido del popup
-                let info = '<div style="font-size: 14px;">';
-                
-                // Nombre del paradero (si existe)
-                if (feature.properties.nombre) {
-                    info += `<h3>${feature.properties.nombre}</h3>`;
-                } else {
-                    info += '<h3>Paradero SITP</h3>';
-                }
+        // Leyenda para Rutas SITP y Paraderos
+        const legendSITP = L.control({ position: 'topright' });
+        legendSITP.onAdd = function () {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <h4>Rutas Zonales SITP</h4>
+                <ul>
+                    <li><span class="sitp"></span> Rutas zonales</li>
+                    <li><span class="paradero"></span> Paraderos zonales</li>
+                </ul>
+            `;
+            return div;
+        };
+        legendSITP.addTo(map1);
 
-                // Código del paradero
-                if (feature.properties.cenefa) {
-                    info += `<p><strong>Código:</strong> ${feature.properties.cenefa}</p>`;
-                }
+        // Cargar Rutas Zonales SITP
+        fetch('Rutas_Zonales_SITP.geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: {
+                        color: '#6346E5',
+                        weight: 3,
+                        opacity: 0.8
+                    },
+                    onEachFeature: function (feature, layer) {
+                        let info = '';
+                        if (feature.properties.abreviatura_destino_zona_sitp) {
+                            info = `<h3>Zona SITP: ${feature.properties.abreviatura_destino_zona_sitp}</h3>`;
+                        } else {
+                            info = '<h3>Ruta SITP</h3>';
+                        }
+                        if (feature.properties.descripcion) {
+                            info += `<p>${feature.properties.descripcion}</p>`;
+                        } else {
+                            info += '<p>No hay descripción disponible.</p>';
+                        }
 
-                // Dirección
-                if (feature.properties.direccion_bandera) {
-                    info += `<p><strong>Dirección:</strong> ${feature.properties.direccion_bandera}</p>`;
-                }
+                        layer.bindPopup(info); // Solo bindPopup, no alert
+                    }
+                }).addTo(map1);
+            })
+            .catch(err => console.error("Error cargando Rutas SITP:", err));
 
-                // Localidad
-                if (feature.properties.localidad) {
-                    info += `<p><strong>Localidad:</strong> ${feature.properties.localidad}</p>`;
-                }
+        // Cargar Paraderos Zonales del SITP
+        fetch('Paraderos_Zonales_del_SITP.geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    pointToLayer: function (feature, latlng) {
+                        return L.circleMarker(latlng, {
+                            radius: 6,
+                            fillColor: '#6E9EE6',
+                            color: '#000',
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        });
+                    },
+                    onEachFeature: function (feature, layer) {
+                        let info = '<div style="font-size: 14px; line-height: 1.5;">';
+                        
+                        if (feature.properties.nombre) {
+                            info += `<h3>${feature.properties.nombre}</h3>`;
+                        } else {
+                            info += '<h3>Paradero SITP</h3>';
+                        }
 
-                info += '</div>';
+                        if (feature.properties.cenefa) {
+                            info += `<p><strong>Código:</strong> ${feature.properties.cenefa}</p>`;
+                        }
 
-                // Asignar popup
-                layer.bindPopup(info);
+                        if (feature.properties.direccion_bandera) {
+                            info += `<p><strong>Dirección:</strong> ${feature.properties.direccion_bandera}</p>`;
+                        }
 
-                // Añadir interacción al clic
-                layer.on('click', function () {
-                    alert(info);
-                });
-            }
-        }).addTo(map1);
-    })
-    .catch(err => console.error("Error cargando Paraderos SITP:", err));
+                        if (feature.properties.localidad) {
+                            info += `<p><strong>Localidad:</strong> ${feature.properties.localidad}</p>`;
+                        }
+
+                        info += '</div>';
+
+                        layer.bindPopup(info);
+                    }
+                }).addTo(map1);
+            })
+            .catch(err => console.error("Error cargando Paraderos SITP:", err));
 
         // --- Mapa 2: Trazados Troncales TransMilenio ---
         const map2 = L.map('map2').setView([4.670473643688381, -74.09632602920297], 17);
