@@ -43,7 +43,7 @@
     <header>
         <div class="logo-container">
             <a href="index.html">
-                <img src="imagenes/mapa.png" alt="Logo">
+                <img src="/imagenes/mapa.png" alt="Logo">
             </a>
         </div>
         <h1>
@@ -76,41 +76,59 @@
             .bindPopup('<b>Barrio Bosque Popular</b><br>Localidad de Engativá, Bogotá.')
             .openPopup();
 
-        // === Consulta Overpass API ===
-        // Extraer vías primarias y secundarias en un radio de 1km alrededor del barrio
-        const overpassQuery = `
-            [out:json];
-            (
-              way["highway"~"primary|secondary|tertiary"](around:1000,${latitud},${longitud});
-            );
-            out geom;
-        `;
+        // === Consulta a la API de ArcGIS con filtro por radio ===
+        // URL base de la API
+        const arcgisBaseUrl = 'https://services2.arcgis.com/NEwhEo9GGSHXcRXV/arcgis/rest/services/Malla_Vial_Integral_Bogota_D_C/FeatureServer/0/query';
 
-        // Llamar a la API de Overpass
-        fetch("https://overpass-api.de/api/interpreter", {
-            method: "POST",
-            body: overpassQuery
-        })
-        .then(response => response.json())
-        .then(data => {
-            const geojson = osmtogeojson(data); // convertir OSM → GeoJSON
-            L.geoJSON(geojson, {
-                style: function (feature) {
-                    switch (feature.properties.tags.highway) {
-                        case 'primary': return {color: "red", weight: 4};
-                        case 'secondary': return {color: "blue", weight: 3};
-                        case 'tertiary': return {color: "green", weight: 2, dashArray: "5,5"};
-                        default: return {color: "gray"};
-                    }
+        // Parámetros de la consulta para un buffer de 1000 metros (1 km) alrededor del punto
+        const params = {
+            where: '1=1',
+            outFields: 'CLASIFICACION,CLASIFICACION_TIPO', // Campos que queremos obtener
+            geometry: `${longitud},${latitud}`,
+            geometryType: 'esriGeometryPoint',
+            inSR: 4326,
+            spatialRel: 'esriSpatialRelIntersects',
+            distance: 1000, // Distancia del buffer en metros
+            units: 'esriSRUnit_Meter',
+            outSR: 4326,
+            f: 'geojson'
+        };
+
+        // Construir la URL completa
+        const queryString = new URLSearchParams(params).toString();
+        const arcgisUrl = `${arcgisBaseUrl}?${queryString}`;
+
+        // Llamar a la API de ArcGIS
+        fetch(arcgisUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al cargar los datos de ArcGIS: ' + response.statusText);
                 }
-            }).addTo(map);
-        })
-        .catch(err => console.error(err));
-
+                return response.json();
+            })
+            .then(data => {
+                // Agregar la capa GeoJSON al mapa con estilos
+                L.geoJSON(data, {
+                    style: function (feature) {
+                        const clasificacion = feature.properties.CLASIFICACION;
+                        switch (clasificacion) {
+                            case 'RED VIAL ARTERIAL PRINCIPAL': return {color: 'red', weight: 4};
+                            case 'RED VIAL INTERMEDIA': return {color: 'blue', weight: 3};
+                            case 'RED VIAL ARTERIAL COMPLEMENTARIA': return {color: 'orange', weight: 3};
+                            case 'RED VIAL LOCAL': return {color: 'green', weight: 2};
+                            default: return {color: 'gray', weight: 1.5};
+                        }
+                    },
+                    onEachFeature: function (feature, layer) {
+                        if (feature.properties) {
+                            let popupContent = `<b>Clasificación:</b> ${feature.properties.CLASIFICACION || 'N/A'}<br><b>Tipo:</b> ${feature.properties.CLASIFICACION_TIPO || 'N/A'}`;
+                            layer.bindPopup(popupContent);
+                        }
+                    }
+                }).addTo(map);
+            })
+            .catch(err => console.error('Error al cargar la malla vial:', err));
     </script>
-
-    <!-- Librería para convertir OSM JSON a GeoJSON -->
-    <script src="https://unpkg.com/osmtogeojson@3.0.0/osmtogeojson.js"></script>
 
 </body>
 </html>
