@@ -166,7 +166,7 @@
         }
 
         .legend .paradero { 
-            background-color: #4e6d9a; 
+            background-color: #486ea8; 
         }
 
         .legend .transmilenio { 
@@ -354,10 +354,10 @@
                     },
                     onEachFeature: function (feature, layer) {
                         let info = '';
-                        if (feature.properties.nombre) {
-                            info = `<h3>${feature.properties.nombre}</h3>`;
-                        } else if (feature.properties.id_trazado_troncal) {
-                            info = `<h3>Trazado: ${feature.properties.id_trazado_troncal}</h3>`;
+                        if (feature.properties.nombre_trazado_troncal) {
+                            info = `<h3>${feature.properties.nombre_trazado_troncal}</h3>`;
+                        } else if (feature.properties.letra_trazado_troncal) {
+                            info = `<h3>Trazado: ${feature.properties.letra_trazado_troncal}</h3>`;
                         } else {
                             info = '<h3>Trazado TransMilenio</h3>';
                         }
@@ -392,16 +392,16 @@
                     },
                     onEachFeature: function (feature, layer) {
                         let info = '<div style="font-size: 14px; line-height: 1.5;">';
-                        if (feature.properties.nombre) {
-                            info += `<h3>${feature.properties.nombre}</h3>`;
+                        if (feature.properties.nombre_estacion) {
+                            info += `<h3>${feature.properties.nombre_estacion}</h3>`;
                         } else {
                             info += '<h3>Estación TransMilenio</h3>';
                         }
-                        if (feature.properties.tipo) {
-                            info += `<p><strong>Tipo:</strong> ${feature.properties.tipo}</p>`;
+                        if (feature.properties.troncal_estacion) {
+                            info += `<p><strong>Tipo:</strong> ${feature.properties.troncal_estacion}</p>`;
                         }
-                        if (feature.properties.direccion) {
-                            info += `<p><strong>Dirección:</strong> ${feature.properties.direccion}</p>`;
+                        if (feature.properties.ubicacion_estacion) {
+                            info += `<p><strong>Dirección:</strong> ${feature.properties.ubicacion_estacion}</p>`;
                         }
                         if (feature.properties.localidad) {
                             info += `<p><strong>Localidad:</strong> ${feature.properties.localidad}</p>`;
