@@ -5,13 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ubicación - Bosque Popular</title>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20n69z7+TSzGNnL4dC4x77z7/Yn9+1gL83r2D/0u4+W6="
-        crossorigin=""></script>
-    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         body {
             margin: 0;
@@ -21,7 +16,7 @@
             min-height: 100vh;
         }
 
-        /* Estilos del encabezado */
+        /* Encabezado */
         header {
             display: flex;
             align-items: center;
@@ -50,6 +45,8 @@
             display: flex;
             justify-content: center;
             padding: 10px 0;
+            position: relative;
+            z-index: 1000;
         }
 
         .filter {
@@ -57,7 +54,6 @@
             position: relative;
         }
 
-        /* Botón desplegable */
         .dropbtn {
             background-color: #555555;
             color: white;
@@ -72,18 +68,17 @@
             background-color: #777777;
         }
 
-        /* Contenedor del menú */
         .dropdown-content {
             display: none;
             position: absolute;
+            top: 100%;
             background-color: #f9f9f9;
             min-width: 160px;
             box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
             border-radius: 4px;
-            z-index: 1;
+            z-index: 2000;
         }
 
-        /* Opciones dentro del menú */
         .dropdown-content a {
             color: black;
             padding: 10px 14px;
@@ -95,30 +90,37 @@
             background-color: #ddd;
         }
 
-        /* Mostrar menú al hacer hover */
         .filter:hover .dropdown-content {
             display: block;
         }
 
-        /* Contenedor principal para el mapa */
+        /* Título alineado a la izquierda */
+        .page-title {
+            background-color: #f4f4f4;
+            padding: 15px 30px;
+            text-align: left;   /* cambio aquí */
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        /* Contenedor del mapa */
         .map-container {
             flex-grow: 1;
             width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            height: calc(100vh - 160px);
+            position: relative;
+            z-index: 1;
         }
-        
-        /* Estilos del mapa de Leaflet */
+
         #map {
             height: 100%;
             width: 100%;
         }
-
     </style>
 </head>
 <body>
 
+    <!-- Encabezado -->
     <header>
         <div class="logo-container">
             <a href="index.html">
@@ -132,6 +134,7 @@
         </h1>
     </header>
 
+    <!-- Barra de filtros -->
     <div class="filters-bar">
         <div class="filter">
             <button class="dropbtn">Equipamientos</button>
@@ -159,72 +162,47 @@
         </div>
     </div>
 
+    <!-- Título -->
+    <div class="page-title">Ubicación</div>
+
+    <!-- Mapa -->
     <div class="map-container">
         <div id="map"></div>
     </div>
-
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        // Coordenadas aproximadas del centro del barrio Bosque Popular
-        const latitud = 4.6865;
-        const longitud = -74.1167;
-        const zoom = 15;
+        // Inicializar mapa
+        const map = L.map('map').setView([4.6865, -74.1167], 15);
 
-        // Inicializar el mapa
-        const map = L.map('map').setView([latitud, longitud], zoom);
-
-        // Añadir la capa de OpenStreetMap
+        // Capa base
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // URL de la API de ArcGIS para la capa de barrios
-        const arcgisUrl = 'https://services.arcgis.com/P3eR9P4V312qG8w6/arcgis/rest/services/Localidad_y_Barrio/FeatureServer/1/query';
-
-        // Parámetros de la consulta para buscar el barrio por nombre
-        const params = {
-            where: "Nombre_Barrio = 'BOSQUE POPULAR'",
-            outFields: '*',
-            outSR: 4326,
-            f: 'geojson'
-        };
-
-        const queryString = new URLSearchParams(params).toString();
-        const fullUrl = `${arcgisUrl}?${queryString}`;
-
-        // Realizar la consulta a la API y cargar el polígono del barrio
-        fetch(fullUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al cargar los datos del barrio: ' + response.statusText);
-                }
-                return response.json();
-            })
+        // Cargar directamente el archivo GeoJSON del proyecto
+        fetch('poligono-barrio.geojson')
+            .then(res => res.json())
             .then(data => {
-                if (data.features.length > 0) {
-                    const barrioLayer = L.geoJSON(data, {
-                        style: function (feature) {
-                            return {
-                                fillColor: '#48a8ff', // Color de relleno del polígono
-                                color: '#0078FF',     // Color del borde del polígono
-                                weight: 3,
-                                opacity: 0.8,
-                                fillOpacity: 0.2
-                            };
-                        },
-                        onEachFeature: function (feature, layer) {
-                            if (feature.properties && feature.properties.Nombre_Barrio) {
-                                layer.bindPopup('<b>Barrio:</b> ' + feature.properties.Nombre_Barrio);
-                            }
-                        }
-                    }).addTo(map);
+                const barrioLayer = L.geoJSON(data, {
+                    style: {
+                        fillColor: '#48a8ff',
+                        color: '#0078FF',
+                        weight: 3,
+                        opacity: 0.8,
+                        fillOpacity: 0.2
+                    }
+                }).addTo(map);
 
-                    // Ajustar la vista del mapa para que se ajuste al polígono del barrio
-                    map.fitBounds(barrioLayer.getBounds());
-                } else {
-                    console.warn('No se encontró el polígono del barrio Bosque Popular.');
-                }
+                // Ajustar la vista al polígono cargado
+                map.fitBounds(barrioLayer.getBounds());
+
+                // Obtener centro del polígono y agregar marcador con popup
+                const center = barrioLayer.getBounds().getCenter();
+                L.marker(center).addTo(map)
+                    .bindPopup("Barrio Bosque Popular")
+                    .openPopup();
             })
-            .catch(err => console.error('Error al obtener los datos del barrio:', err));
+            .catch(err => console.error("Error cargando el GeoJSON:", err));
     </script>
 
 </body>
