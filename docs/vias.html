@@ -1,99 +1,236 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <title>Malla Vial Bogotá - Bosque Popular</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bosque Popular - Vías</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
 
-  <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
 
-  <!-- Esri Leaflet -->
-  <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
+        /* Estilos del encabezado */
+        header {
+            display: flex;
+            align-items: center;
+            background-color: #0D0D0D;
+            color: white;
+            padding: 5px 30px;
+        }
 
-  <style>
-    body { margin:0; padding:0; }
-    #map { width:100%; height:100vh; }
-    .legend { 
-      background:white; 
-      padding:10px; 
-      line-height:1.4; 
-      font-size:14px; 
-      border-radius:8px; 
-      box-shadow: 0 0 5px rgba(0,0,0,0.3);
-    }
-    .legend div { margin-bottom:5px; }
-    .legend i { width:18px; height:18px; float:left; margin-right:8px; opacity:0.9; }
-  </style>
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        header img {
+            height: 35px;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-left: 20px;
+        }
+
+        /* Barra de filtros */
+        .filters-bar {
+            background-color: #333333;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+        }
+
+        .filter {
+            margin: 0 15px;
+            position: relative;
+        }
+
+        /* Botón desplegable */
+        .dropbtn {
+            background-color: #555555;
+            color: white;
+            padding: 8px 16px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .dropbtn:hover {
+            background-color: #777777;
+        }
+
+        /* Contenedor del menú */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 1;
+        }
+
+        /* Opciones dentro del menú */
+        .dropdown-content a {
+            color: black;
+            padding: 10px 14px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+
+        /* Mostrar menú al hacer hover */
+        .filter:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Mapa */
+        #map {
+            width: 100%;
+            height: calc(100vh - 110px); /* ocupa todo menos encabezado+barra */
+        }
+
+        /* Leyenda */
+        .legend { 
+            background: white; 
+            padding: 10px; 
+            line-height: 1.4; 
+            font-size: 14px; 
+            border-radius: 8px; 
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+        .legend div { margin-bottom: 5px; }
+        .legend i { 
+            width: 18px; 
+            height: 18px; 
+            float: left; 
+            margin-right: 8px; 
+            opacity: 0.9; 
+        }
+    </style>
 </head>
 <body>
-  <div id="map"></div>
-  <script>
-    // Coordenadas dadas
-    var centroLat = 4.670752136793925;
-    var centroLng = -74.09670595895943;
 
-    // Crear mapa centrado en el punto dado con zoom 20
-    var map = L.map('map').setView([centroLat, centroLng], 20);
+    <!-- Encabezado -->
+    <header>
+        <div class="logo-container">
+            <a href="index.html">
+                <img src="imagenes/mapa.png" alt="Logo">
+            </a>
+        </div>
+        <h1>
+            <a href="index.html" style="text-decoration: none; color: white;">
+                Bosque Popular
+            </a>
+        </h1>
+    </header>
 
-    // Capa base
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
+    <!-- Barra de Filtros -->
+    <div class="filters-bar">
+        <div class="filter">
+            <button class="dropbtn">Equipamientos</button>
+            <div class="dropdown-content">
+                <a href="parques.html">Parques</a>
+                <a href="movilidad.html">Movilidad</a>
+                <a href="vias.html">Vías</a>
+            </div>
+        </div>
 
-    // Marcador en el punto indicado
-    var marker = L.marker([centroLat, centroLng]).addTo(map)
-      .bindPopup("Ubicación seleccionada")
-      .openPopup();
+        <div class="filter">
+            <button class="dropbtn">Problemáticas</button>
+            <div class="dropdown-content">
+                <a href="calidadaire.html">Calidad del aire</a>
+            </div>
+        </div>
 
-    // Colores por tipo de vía
-    var colorPorTipo = {
-      "AUT": "#e6194B",
-      "AV": "#3cb44b",
-      "AC": "#4363d8",
-      "CARR": "#f58231"
-    };
+        <div class="filter">
+            <button class="dropbtn">Acerca de mí</button>
+            <div class="dropdown-content">
+                <a href="descripcion.html">Descripción</a>
+                <a href="ubicacion.html">Ubicación</a>
+                <a href="catastro3d.html">Catastro 3D</a>
+            </div>
+        </div>
+    </div>
 
-    function getColor(tipo) {
-      return colorPorTipo[tipo] || "gray";
-    }
+    <!-- Contenedor del mapa -->
+    <div id="map"></div>
 
-    // Cargar vías desde servicio ArcGIS
-    var vias = L.esri.featureLayer({
-      url: "https://services2.arcgis.com/NEwhEo9GGSHXcRXV/arcgis/rest/services/Malla_Vial_Integral_Bogota_D_C/FeatureServer/0",
-      style: function (feature) {
-        return {
-          color: getColor(feature.properties.MVITIPO),
-          weight: 2
+    <script>
+        // Coordenadas del centro
+        var centroLat = 4.670752136793925;
+        var centroLng = -74.09670595895943;
+
+        // Crear mapa con zoom 16
+        var map = L.map('map').setView([centroLat, centroLng], 16);
+
+        // Capa base
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Marcador central
+        L.marker([centroLat, centroLng]).addTo(map)
+            .bindPopup("Ubicación seleccionada")
+            .openPopup();
+
+        // Colores por tipo de vía
+        var colorPorTipo = {
+            "AUT": "#e6194B",
+            "AV": "#3cb44b",
+            "AC": "#4363d8",
+            "CARR": "#f58231"
         };
-      },
-      onEachFeature: function (feature, layer) {
-        layer.on("click", function (e) {
-          var props = feature.properties;
-          var latlng = e.latlng;
-          var content =
-            "<b>Nombre:</b> " + (props.NOMBRE_VIA || "Sin nombre") + "<br>" +
-            "<b>Tipo:</b> " + (props.MVITIPO || "No definido") + "<br>" +
-            "<b>Jerarquía:</b> " + (props.JERARQUIA || "No definida") + "<br>" +
-            "<b>Latitud:</b> " + latlng.lat.toFixed(6) + "<br>" +
-            "<b>Longitud:</b> " + latlng.lng.toFixed(6);
-          layer.bindPopup(content).openPopup();
-        });
-      }
-    }).addTo(map);
 
-    // Leyenda
-    var legend = L.control({position: "bottomright"});
-    legend.onAdd = function () {
-      var div = L.DomUtil.create("div", "legend");
-      div.innerHTML = "<b>Tipos de vía</b><br>";
-      for (var tipo in colorPorTipo) {
-        div.innerHTML += '<div><i style="background:' + colorPorTipo[tipo] + '"></i>' + tipo + "</div>";
-      }
-      return div;
-    };
-    legend.addTo(map);
-  </script>
+        function getColor(tipo) {
+            return colorPorTipo[tipo] || "gray";
+        }
+
+        // Cargar la capa de vías
+        var vias = L.esri.featureLayer({
+            url: "https://services2.arcgis.com/NEwhEo9GGSHXcRXV/arcgis/rest/services/Malla_Vial_Integral_Bogota_D_C/FeatureServer/0",
+            style: function (feature) {
+                return {
+                    color: getColor(feature.properties.MVITIPO),
+                    weight: 2
+                };
+            },
+            onEachFeature: function (feature, layer) {
+                layer.on("click", function (e) {
+                    var props = feature.properties;
+                    var latlng = e.latlng;
+                    var content =
+                        "<b>Nombre:</b> " + (props.NOMBRE_VIA || "Sin nombre") + "<br>" +
+                        "<b>Tipo:</b> " + (props.MVITIPO || "No definido") + "<br>" +
+                        "<b>Jerarquía:</b> " + (props.JERARQUIA || "No definida") + "<br>" +
+                        "<b>Latitud:</b> " + latlng.lat.toFixed(6) + "<br>" +
+                        "<b>Longitud:</b> " + latlng.lng.toFixed(6);
+                    layer.bindPopup(content).openPopup();
+                });
+            }
+        }).addTo(map);
+
+        // Leyenda
+        var legend = L.control({position: "bottomright"});
+        legend.onAdd = function () {
+            var div = L.DomUtil.create("div", "legend");
+            div.innerHTML = "<b>Tipos de vía</b><br>";
+            for (var tipo in colorPorTipo) {
+                div.innerHTML += '<div><i style="background:' + colorPorTipo[tipo] + '"></i>' + tipo + "</div>";
+            }
+            return div;
+        };
+        legend.addTo(map);
+    </script>
 </body>
 </html>
+
