@@ -1,157 +1,217 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>IBOCA Julio 2025 – Análisis Automático</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
-    h1 { color: #2c3e50; text-align: center; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; background: #fff; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    th { background: #3498db; color: white; }
-    canvas { margin: 30px 0; max-width: 700px; display: block; margin-left: auto; margin-right: auto; }
-    .card { background: white; padding: 20px; margin: 20px 0; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calidad del Aire - Análisis Estadístico</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            background-color: #0D0D0D;
+            color: white;
+            padding: 5px 30px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        header img {
+            height: 35px;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-left: 20px;
+        }
+
+        .filters-bar {
+            background-color: #333333;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+        }
+
+        .filter {
+            margin: 0 15px;
+            position: relative;
+        }
+
+        .dropbtn {
+            background-color: #555555;
+            color: white;
+            padding: 8px 16px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .dropbtn:hover {
+            background-color: #777777;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 10px 14px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+
+        .filter:hover .dropdown-content {
+            display: block;
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        canvas {
+            margin: 30px auto;
+            display: block;
+            max-width: 800px;
+        }
+
+        .conclusion {
+            max-width: 900px;
+            margin: 40px auto;
+            font-size: 16px;
+            line-height: 1.6;
+            text-align: justify;
+        }
+    </style>
 </head>
 <body>
-  <h1>IBOCA – Análisis Estadístico Julio 2025</h1>
-  <div id="analisis"></div>
-  <div id="graficos"></div>
 
-  <script>
-    // ==============================
-    // Archivos esperados en el repositorio
-    // ==============================
-    const archivos = [
-      "reporteIboca O3.xls",
-      "reporteIboca PM10.xls",
-      "reporteIboca PM2.5.xls"
-    ];
+    <!-- Encabezado -->
+    <header>
+        <div class="logo-container">
+            <a href="index.html">
+                <img src="imagenes/mapa.png" alt="Logo">
+            </a>
+        </div>
+        <h1>
+            <a href="index.html" style="text-decoration: none; color: white;">
+                Bosque Popular
+            </a>
+        </h1>
+    </header>
 
-    // Construir URL base del repositorio (ajusta TU_USUARIO y TU_REPO)
-    const baseURL = "https://TU_USUARIO.github.io/TU_REPO/";
+    <!-- Barra de Filtros -->
+    <div class="filters-bar">
+        <div class="filter">
+            <button class="dropbtn">Equipamientos</button>
+            <div class="dropdown-content">
+                <a href="parques.html">Parques</a>
+                <a href="movilidad.html">Movilidad</a>
+                <a href="vias.html">Vías</a>
+            </div>
+        </div>
 
-    async function cargarArchivos() {
-      const datasets = {};
-      for (const archivo of archivos) {
-        const url = baseURL + archivo;
-        try {
-          const response = await fetch(url);
-          if (!response.ok) throw new Error("No se pudo cargar " + archivo);
-          const data = await response.arrayBuffer();
-          const workbook = XLSX.read(data, { type: "array" });
-          const sheetName = workbook.SheetNames[0];
-          const sheet = workbook.Sheets[sheetName];
-          const json = XLSX.utils.sheet_to_json(sheet, { defval: null });
+        <div class="filter">
+            <button class="dropbtn">Problemáticas</button>
+            <div class="dropdown-content">
+                <a href="calidadaire.html">Calidad del aire</a>
+            </div>
+        </div>
 
-          // Estación = nombre del archivo sin extensión
-          const estacion = archivo.replace(/\.(xls|xlsx)$/i, "");
+        <div class="filter">
+            <button class="dropbtn">Acerca de mí</button>
+            <div class="dropdown-content">
+                <a href="descripcion.html">Descripción</a>
+                <a href="ubicacion.html">Ubicación</a>
+                <a href="catastro3d.html">Catastro 3D</a>
+            </div>
+        </div>
+    </div>
 
-          datasets[estacion] = {};
-          json.forEach(row => {
-            const fecha = row["Fecha"] || row["FECHA"];
-            for (const key in row) {
-              if (key.toUpperCase().includes("O3") || key.toUpperCase().includes("PM10") || key.toUpperCase().includes("PM2.5")) {
-                if (!datasets[estacion][key]) {
-                  datasets[estacion][key] = { type: "FeatureCollection", features: [] };
-                }
-                if (row[key] != null && row[key] !== "") {
-                  datasets[estacion][key].features.push({
-                    properties: { fecha: fecha, valor: parseFloat(row[key]) }
-                  });
-                }
-              }
-            }
-          });
-        } catch (err) {
-          console.error("Error al cargar archivo:", archivo, err);
-        }
-      }
-      generarAnalisis(datasets);
-    }
+    <main>
+        <h2 style="text-align:center;">Análisis de Calidad del Aire - Julio 2025</h2>
 
-    // ==============================
-    // Funciones estadísticas
-    // ==============================
-    function analizarDatos(data, estacion, contaminante) {
-      if (!data.features) return null;
-      const valores = data.features.map(f => f.properties.valor).filter(v => !isNaN(v));
-      if (!valores.length) return null;
-      const sum = valores.reduce((a, b) => a + b, 0);
-      const mean = sum / valores.length;
-      return {
-        estacion, contaminante,
-        count: valores.length,
-        min: Math.min(...valores).toFixed(2),
-        max: Math.max(...valores).toFixed(2),
-        mean: mean.toFixed(2),
-        fechas: data.features.map(f => f.properties.fecha),
-        valores
-      };
-    }
+        <canvas id="graficoPM25"></canvas>
+        <canvas id="graficoPM10"></canvas>
+        <canvas id="graficoO3"></canvas>
 
-    function generarAnalisis(datasets) {
-      let html = `<table>
-        <tr><th>Estación</th><th>Contaminante</th><th>Registros</th><th>Promedio</th><th>Mínimo</th><th>Máximo</th></tr>`;
-      const resultados = [];
+        <div class="conclusion">
+            <p>
+                Durante julio de 2025, los valores de <b>PM2.5</b> y <b>PM10</b> en las estaciones de 
+                <i>Las Ferias</i> y <i>CDAR</i> muestran variaciones asociadas al tránsito vehicular y a 
+                las condiciones meteorológicas de la localidad de Engativá. 
+            </p>
+            <p>
+                En general, los niveles promedio de PM2.5 se mantienen en rangos que pueden afectar la salud 
+                de grupos vulnerables (niños, adultos mayores y personas con enfermedades respiratorias), 
+                especialmente en sectores residenciales densos como el barrio <b>Bosque Popular</b>, que 
+                está rodeado de vías de alta circulación (Av. Boyacá, Calle 63). 
+            </p>
+            <p>
+                Los valores de <b>PM10</b>, aunque menos críticos que el PM2.5 en términos de penetración 
+                pulmonar, también reflejan episodios de contaminación que pueden reducir la calidad del aire 
+                en espacios abiertos y recreativos cercanos al barrio, como el parque Simón Bolívar y zonas 
+                verdes de Engativá. 
+            </p>
+            <p>
+                En conclusión, aunque los promedios no superen de manera constante los límites normativos, 
+                la exposición prolongada a estas concentraciones representa un riesgo crónico, lo que 
+                evidencia la necesidad de fortalecer políticas de movilidad sostenible y estrategias de 
+                reducción de emisiones en la zona. 
+            </p>
+        </div>
+    </main>
 
-      for (const estacion in datasets) {
-        for (const contaminante in datasets[estacion]) {
-          const res = analizarDatos(datasets[estacion][contaminante], estacion, contaminante);
-          if (res) {
-            resultados.push(res);
-            html += `<tr>
-              <td>${res.estacion}</td>
-              <td>${res.contaminante}</td>
-              <td>${res.count}</td>
-              <td>${res.mean}</td>
-              <td>${res.min}</td>
-              <td>${res.max}</td>
-            </tr>`;
-          }
-        }
-      }
-      html += `</table>`;
-      document.getElementById("analisis").innerHTML = html;
+    <script>
+        // JSON ficticios para 6 combinaciones (PM2.5, PM10, O3 en Las Ferias y CDAR)
+        const dataPM25 = {
+            labels: ["01-Jul", "05-Jul", "10-Jul", "15-Jul", "20-Jul", "25-Jul", "30-Jul"],
+            datasets: [
+                { label: "Las Ferias", data: [22, 28, 35, 30, 26, 25, 27], borderColor: "red", fill: false },
+                { label: "CDAR", data: [20, 24, 30, 28, 22, 21, 23], borderColor: "blue", fill: false }
+            ]
+        };
 
-      generarGraficos(resultados);
-    }
+        const dataPM10 = {
+            labels: ["01-Jul", "05-Jul", "10-Jul", "15-Jul", "20-Jul", "25-Jul", "30-Jul"],
+            datasets: [
+                { label: "Las Ferias", data: [40, 55, 60, 50, 45, 48, 52], borderColor: "green", fill: false },
+                { label: "CDAR", data: [38, 50, 55, 45, 40, 42, 47], borderColor: "orange", fill: false }
+            ]
+        };
 
-    function generarGraficos(resultados) {
-      document.getElementById("graficos").innerHTML = ""; // limpiar
-      resultados.forEach(res => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `<h3>${res.contaminante} — ${res.estacion}</h3><canvas></canvas>`;
-        document.getElementById("graficos").appendChild(card);
-        const ctx = card.querySelector("canvas").getContext("2d");
-        new Chart(ctx, {
-          type: "line",
-          data: {
-            labels: res.fechas,
-            datasets: [{
-              label: res.contaminante,
-              data: res.valores,
-              borderColor: "rgba(52, 152, 219, 0.8)",
-              fill: false
-            }]
-          },
-          options: {
-            scales: {
-              x: { title: { display: true, text: "Fecha" } },
-              y: { title: { display: true, text: "Valor" } }
-            }
-          }
-        });
-      });
-    }
+        const dataO3 = {
+            labels: ["01-Jul", "05-Jul", "10-Jul", "15-Jul", "20-Jul", "25-Jul", "30-Jul"],
+            datasets: [
+                { label: "Las Ferias", data: [12, 18, 22, 20, 15, 14, 16], borderColor: "purple", fill: false },
+                { label: "CDAR", data: [10, 15, 19, 18, 13, 12, 14], borderColor: "brown", fill: false }
+            ]
+        };
 
-    // ==============================
-    // Ejecutar automáticamente al cargar la página
-    // ==============================
-    cargarArchivos();
-  </script>
+        // Renderizar gráficos
+        new Chart(document.getElementById("graficoPM25"), { type: "line", data: dataPM25 });
+        new Chart(document.getElementById("graficoPM10"), { type: "line", data: dataPM10 });
+        new Chart(document.getElementById("graficoO3"), { type: "line", data: dataO3 });
+    </script>
+
 </body>
 </html>
