@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parques - Bosque Popular</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Estilos del encabezado */
+        header {
+            display: flex;
+            align-items: center;
+            background-color: #0D0D0D;
+            color: white;
+            padding: 5px 30px;
+            z-index: 1001; /* Encabezado por encima */
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        header img {
+            height: 35px;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-left: 20px;
+        }
+
+        /* Barra de filtros */
+        .filters-bar {
+            background-color: #333333;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+            position: relative;
+            z-index: 1001; /* Barra siempre sobre el mapa */
+        }
+
+        .filter {
+            margin: 0 15px;
+            position: relative; /* Necesario para dropdown */
+        }
+
+        /* Botón desplegable */
+        .dropbtn {
+            background-color: #555555;
+            color: white;
+            padding: 8px 16px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .dropbtn:hover {
+            background-color: #777777;
+        }
+
+        /* Contenedor del menú */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 9999; 
+        }
+
+        /* Opciones dentro del menú */
+        .dropdown-content a {
+            color: black;
+            padding: 10px 14px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+
+        /* Mostrar menú al pasar el mouse */
+        .filter:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Mapa */
+        #map {
+            flex: 2; 
+            height: 100%;
+        }
+
+        /* 🔹 Evitar que los polígonos muestren recuadro negro al hacer clic */
+        .leaflet-interactive:focus {
+            outline: none !important;
+        }
+
+        /* Descripción */
+        .description {
+            flex: 1; 
+            padding: 20px;
+            background-color: #f4f4f4;
+            overflow-y: auto;
+            border-left: 1px solid #ccc;
+        }
+
+        /* Contenedor de mapa y descripción */
+        .container {
+            display: flex;
+            height: calc(100vh - 120px); /* Resta header y barra */
+        }
+
+        button {
+            padding: 8px 16px;
+            font-size: 14px;
+            background-color: #444444;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Encabezado -->
+    <header>
+        <div class="logo-container">
+            <a href="index.html">
+                <img src="imagenes/mapa.png" alt="Logo">
+            </a>
+        </div>
+        <h1>
+            <a href="index.html" style="text-decoration: none; color: white;">
+                Bosque Popular
+            </a>
+        </h1>
+    </header>
+
+    <!-- Barra de Filtros -->
+    <div class="filters-bar">
+        <!-- Dropdown de Equipamientos -->
+        <div class="filter">
+            <button class="dropbtn">Equipamientos</button>
+            <div class="dropdown-content">
+                <a href="parques.html">Parques</a>
+                <a href="movilidad.html">Movilidad</a>
+                <a href="vias.html">Vías</a>
+            </div>
+        </div>
+
+        <div class="filter">
+            <button class="dropbtn">Problemáticas</button>
+            <div class="dropdown-content">
+                <a href="calidadaire.html">Calidad del aire</a>
+            </div>
+        </div>
+
+        <div class="filter">
+            <button class="dropbtn">Acerca de mí</button>
+            <div class="dropdown-content">
+                <a href="descripcion.html">Descripción</a>
+                <a href="ubicacion.html">Ubicación</a>
+                <a href="catastro3d.html">Catastro 3D</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor para el mapa y la descripción -->
+    <div class="container">
+        <!-- Mapa Leaflet -->
+        <div id="map"></div>
+
+        <!-- Descripción -->
+        <div class="description">
+            <h2>Parques</h2>
+            <p>El barrio Bosque Popular cuenta con tres parques vecinales: El Trébol, La Estrella del Sur y Bosque Popular. </p>
+            <p>Haga click sobre cada parque para obtener más información. </p>
+        </div>
+    </div>
+
+    <!-- Scripts de Leaflet -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Crear el mapa
+        const map = L.map('map').setView([4.670473643688381, -74.09632602920297], 17);
+    
+        // Agregar capa de mapa base
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+    
+        // Descripción general
+        const descripcionGeneral = `
+            <h2>Parques</h2>
+            <p>El barrio Bosque Popular cuenta con tres parques vecinales: El Trébol, La Estrella del Sur y Bosque Popular.</p>
+            <p>Haga click sobre cada parque para obtener más información.</p>
+        `;
+    
+        // Diccionario con descripciones e imágenes
+        const parquesInfo = {
+            "Parque El Trébol": {
+                descripcion: "Este parque es un punto de encuentro comunitario con zonas verdes y juegos infantiles.",
+                imagen: "imagenes/p-el-trebol.jpg"
+            },
+            "Parque La Estrella del Sur": {
+                descripcion: "Un parque vecinal con amplias zonas deportivas y espacios de recreación.",
+                imagen: "imagenes/p-la-estrella-del-sur.jpg"
+            },
+            "Parque Bosque Popular": {
+                descripcion: "El parque más grande del barrio, rodeado de árboles y senderos para caminar.",
+                imagen: "imagenes/p-bosque-popular.jpg"
+            }
+        };
+    
+        // 🌳 Ícono de árbol (local)
+        const treeIcon = L.icon({
+            iconUrl: "imagenes/tree.png",  // 👈 tu archivo local
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+        });
+    
+        // Función para actualizar descripción lateral
+        function actualizarDescripcion(nombre) {
+            const info = parquesInfo[nombre];
+            if (info) {
+                document.querySelector('.description').innerHTML = `
+                    <h2>${nombre}</h2>
+                    <p>${info.descripcion}</p>
+                    <img src="${info.imagen}" alt="${nombre}" style="width:100%;border-radius:8px;margin-top:10px;">
+                `;
+            } else {
+                document.querySelector('.description').innerHTML = descripcionGeneral;
+            }
+        }
+    
+        // Variables globales
+        let capaSeleccionada = null;
+        let marcadorSeleccionado = null;
+        let geojsonLayer;
+    
+        // Cargar el GeoJSON
+        fetch('parques.geojson')
+            .then(response => response.json())
+            .then(data => {
+                geojsonLayer = L.geoJSON(data, {
+                    style: {
+                        color: "green",
+                        weight: 2,
+                        fillColor: "transparent",
+                        fillOpacity: 0.3
+                    },
+                    onEachFeature: function (feature, layer) {
+                        const nombre = feature.properties.nombre;
+                        const centroide = layer.getBounds().getCenter();
+    
+                        // Crear marcador con su posición base
+                        const marker = L.marker(centroide, { icon: treeIcon })
+                            .addTo(map)
+                            .on('click', () => seleccionarParque(layer, marker, nombre));
+    
+                        // Guardar posición base para que no se pierda
+                        marker._baseLatLng = centroide;
+    
+                        // Tooltip en hover
+                        layer.bindTooltip(nombre, { permanent: false, sticky: true });
+    
+                        // Click en polígono
+                        layer.on('click', () => seleccionarParque(layer, marker, nombre));
+                    }
+                }).addTo(map);
+    
+                // Evento para clic fuera de polígonos → reset
+                map.on('click', function (e) {
+                    if (!e.originalEvent.target.closest('.leaflet-interactive')) {
+                        resetSeleccion();
+                        actualizarDescripcion(null);
+                    }
+                });
+            });
+    
+        // Selección de parque
+        function seleccionarParque(layer, marker, nombre) {
+            // Resetear selección anterior
+            resetSeleccion();
+    
+            // Resaltar polígono
+            layer.setStyle({
+                color: "cyan",
+                fillColor: "transparent",
+                fillOpacity: 0.6
+            });
+    
+            // Guardar selección
+            capaSeleccionada = layer;
+            marcadorSeleccionado = marker;
+    
+            // Animar marcador (salto infinito) desde la posición base
+            let baseLatLng = marker._baseLatLng;
+            let offset = 0;
+            let direction = 1;
+            let anim = setInterval(() => {
+                offset += 0.00005 * direction;
+                if (offset > 0.0003 || offset < 0) direction *= -1;
+                marker.setLatLng([baseLatLng.lat + offset, baseLatLng.lng]);
+            }, 50);
+    
+            // Guardar animación en marker
+            marker._anim = anim;
+    
+            // Actualizar descripción lateral
+            actualizarDescripcion(nombre);
+        }
+    
+        // Reset de selección
+        function resetSeleccion() {
+            if (capaSeleccionada) {
+                geojsonLayer.resetStyle(capaSeleccionada);
+                capaSeleccionada = null;
+            }
+            if (marcadorSeleccionado) {
+                clearInterval(marcadorSeleccionado._anim); // detener animación
+                marcadorSeleccionado.setLatLng(marcadorSeleccionado._baseLatLng); // volver exactamente a la base
+                marcadorSeleccionado = null;
+            }
+        }
+    </script>
+    
+    
+</body>
+</html>

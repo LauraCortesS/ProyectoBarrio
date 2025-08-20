@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catastro 3D - Bosque Popular</title>
+
+    <!-- Estilos -->
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            background-color: #0D0D0D;
+            color: white;
+            padding: 5px 30px;
+            flex-shrink: 0;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        header img {
+            height: 35px;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-left: 20px;
+        }
+
+        h1 a {
+            text-decoration: none;
+            color: white;
+        }
+
+        .filters-bar {
+            background-color: #333333;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+            flex-shrink: 0;
+        }
+
+        .filter {
+            margin: 0 15px;
+            position: relative;
+        }
+
+        .dropbtn {
+            background-color: #555555;
+            color: white;
+            padding: 8px 16px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .dropbtn:hover {
+            background-color: #777777;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 10px 14px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+
+        .filter:hover .dropdown-content {
+            display: block;
+        }
+
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+            flex-grow: 1;
+        }
+    </style>
+
+    <!-- Cesium -->
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+</head>
+<body>
+    <!-- Encabezado -->
+    <header>
+        <div class="logo-container">
+            <a href="index.html">
+                <img src="imagenes/mapa.png" alt="Logo">
+            </a>
+        </div>
+        <h1>
+            <a href="index.html">Bosque Popular</a>
+        </h1>
+    </header>
+
+    <!-- Barra de Filtros -->
+    <div class="filters-bar">
+        <div class="filter">
+            <button class="dropbtn">Equipamientos</button>
+            <div class="dropdown-content">
+                <a href="parques.html">Parques</a>
+                <a href="movilidad.html">Movilidad</a>
+                <a href="vias.html">Vías</a>
+            </div>
+        </div>
+        <div class="filter">
+            <button class="dropbtn">Problemáticas</button>
+            <div class="dropdown-content">
+                <a href="calidadaire.html">Calidad del aire</a>
+            </div>
+        </div>
+        <div class="filter">
+            <button class="dropbtn">Acerca de mí</button>
+            <div class="dropdown-content">
+                <a href="descripcion.html">Descripción</a>
+                <a href="ubicacion.html">Ubicación</a>
+                <a href="catastro3d.html">Catastro 3D</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor del visor Cesium -->
+    <div id="cesiumContainer"></div>
+
+    <!-- Script de Cesium -->
+    <script type="module">
+        Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZjBjZWNjNi1lN2E2LTQxN2EtOWY2MS0xZjliMjIxMDZmMzUiLCJpZCI6MzMxMzU3LCJpYXQiOjE3NTUwNDI1NTB9.CLqrLXgbk4VfneVH0NK8xmkyEll98A0whFdesGkvMTo";
+
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+            terrain: Cesium.Terrain.fromWorldTerrain(),
+            baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+                Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
+                    Cesium.ArcGisBaseMapType.SATELLITE
+                )
+            ),
+            animation: false,
+            timeline: false
+        });
+        viewer.scene.globe.depthTestAgainstTerrain = true;
+
+        async function loadData() {
+            // PREDIOS extruidos
+            const predios = await Cesium.GeoJsonDataSource.load("construcciones.geojson");
+            viewer.dataSources.add(predios);
+            predios.entities.values.forEach(e => {
+                const pol = e.polygon;
+                if (!pol) return;
+                const pisos = e.properties.CONNPISOS ? e.properties.CONNPISOS.getValue() : 1;
+                pol.extrudedHeight = pisos * 3;
+                pol.material = pisos > 10 ? Cesium.Color.RED.withAlpha(0.7) :
+                                pisos > 5 ? Cesium.Color.ORANGE.withAlpha(0.7) :
+                                            Cesium.Color.YELLOW.withAlpha(0.7);
+                pol.outline = false;
+                pol.heightReference = Cesium.HeightReference.CLAMP_TO_GROUND;
+                pol.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+            });
+
+            // Cámara directa al punto después de cargar todo
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(-74.0961688291039, 4.6615210473947934, 3000),
+                orientation: { heading: 0, pitch: Cesium.Math.toRadians(-25) },
+                duration: 3
+            });
+        }
+
+        loadData().catch(e => console.error("Error cargando GeoJSON:", e));
+    </script>
+</body>
+</html>

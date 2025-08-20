@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movilidad - Bosque Popular</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Encabezado */
+        header {
+            display: flex;
+            align-items: center;
+            background-color: #0D0D0D;
+            color: white;
+            padding: 5px 30px;
+            z-index: 1001;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        header img {
+            height: 35px;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-left: 20px;
+        }
+
+        /* Barra de filtros */
+        .filters-bar {
+            background-color: #333333;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+            position: relative;
+            z-index: 1001;
+        }
+
+        .filter {
+            margin: 0 15px;
+            position: relative;
+        }
+
+        .dropbtn {
+            background-color: #555555;
+            color: white;
+            padding: 8px 16px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .dropbtn:hover {
+            background-color: #777777;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 9999;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 10px 14px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+
+        .filter:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Contenedores de mapas */
+        .maps-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 120px);
+            overflow: hidden;
+        }
+
+        .map-column {
+            flex: 1;
+            position: relative;
+            border-right: 1px solid #ccc;
+        }
+
+        .map-column:last-child {
+            border-right: none;
+        }
+
+        /* Título del mapa */
+        .map-title {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 100;
+        }
+
+        /* Mapa */
+        #map1, #map2 {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Leyenda */
+        .legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .legend h4 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .legend li {
+            margin: 4px 0;
+        }
+
+        .legend span {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-right: 5px;
+            border-radius: 2px;
+        }
+
+        .legend .sitp { 
+            background-color: #32199e; 
+        }
+
+        .legend .paradero { 
+            background-color: #486ea8; 
+        }
+
+        .legend .transmilenio { 
+            background-color: #892614; 
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Encabezado -->
+    <header>
+        <div class="logo-container">
+            <a href="index.html">
+                <img src="imagenes/mapa.png" alt="Logo">
+            </a>
+        </div>
+        <h1>
+            <a href="index.html" style="text-decoration: none; color: white;">
+                Bosque Popular
+            </a>
+        </h1>
+    </header>
+
+    <!-- Barra de Filtros -->
+    <div class="filters-bar">
+        <div class="filter">
+            <button class="dropbtn">Equipamientos</button>
+            <div class="dropdown-content">
+                <a href="parques.html">Parques</a>
+                <a href="movilidad.html">Movilidad</a>
+                <a href="vias.html">Vías</a>
+            </div>
+        </div>
+
+        <div class="filter">
+            <button class="dropbtn">Problemáticas</button>
+            <div class="dropdown-content">
+                <a href="calidadaire.html">Calidad del aire</a>
+            </div>
+        </div>
+
+        <div class="filter">
+            <button class="dropbtn">Acerca de mí</button>
+            <div class="dropdown-content">
+                <a href="descripcion.html">Descripción</a>
+                <a href="ubicacion.html">Ubicación</a>
+                <a href="catastro3d.html">Catastro 3D</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedores de mapas -->
+    <div class="maps-container">
+
+        <!-- Mapa 1: Rutas Zonales SITP -->
+        <div class="map-column">
+            <div class="map-title">Rutas Zonales SITP</div>
+            <div id="map1"></div>
+        </div>
+
+        <!-- Mapa 2: Trazados Troncales TransMilenio -->
+        <div class="map-column">
+            <div class="map-title">Trazados Troncales TransMilenio</div>
+            <div id="map2"></div>
+        </div>
+
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // --- Mapa 1: Rutas Zonales SITP + Paraderos ---
+        const map1 = L.map('map1').setView([4.670473643688381, -74.09632602920297], 17);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map1);
+
+        // Leyenda para Rutas SITP y Paraderos
+        const legendSITP = L.control({ position: 'topright' });
+        legendSITP.onAdd = function () {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <h4>Rutas Zonales SITP</h4>
+                <ul>
+                    <li><span class="sitp"></span> Rutas zonales</li>
+                    <li><span class="paradero"></span> Paraderos zonales</li>
+                </ul>
+            `;
+            return div;
+        };
+        legendSITP.addTo(map1);
+
+        // Cargar Rutas Zonales SITP
+        fetch('Rutas_Zonales_SITP.geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: {
+                        color: '#6346E5',
+                        weight: 5,
+                        opacity: 0.8
+                    },
+                    onEachFeature: function (feature, layer) {
+                        let info = '';
+                        if (feature.properties.denominacion_ruta_zonal) {
+                            info = `<h3>Zona SITP: ${feature.properties.denominacion_ruta_zonal}</h3>`;
+                        } else {
+                            info = '<h3>Ruta SITP</h3>';
+                        }
+                        if (feature.properties.operador_ruta_zonal) {
+                            info += `<p>${feature.operador_ruta_zonal}</p>`;
+                        } else {
+                            info += '<p>No hay descripción disponible.</p>';
+                        }
+                        layer.bindPopup(info);
+                    }
+                }).addTo(map1);
+            })
+            .catch(err => console.error("Error cargando Rutas SITP:", err));
+
+        // Cargar Paraderos Zonales del SITP
+        fetch('Paraderos_Zonales_del_SITP.geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    pointToLayer: function (feature, latlng) {
+                        return L.circleMarker(latlng, {
+                            radius: 8,
+                            fillColor: '#6E9EE6',
+                            color: '#000',
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        });
+                    },
+                    onEachFeature: function (feature, layer) {
+                        let info = '<div style="font-size: 14px; line-height: 1.5;">';
+                        if (feature.properties.nombre) {
+                            info += `<h3>${feature.properties.nombre}</h3>`;
+                        } else {
+                            info += '<h3>Paradero SITP</h3>';
+                        }
+                        if (feature.properties.cenefa) {
+                            info += `<p><strong>Código:</strong> ${feature.properties.cenefa}</p>`;
+                        }
+                        if (feature.properties.direccion_bandera) {
+                            info += `<p><strong>Dirección:</strong> ${feature.properties.direccion_bandera}</p>`;
+                        }
+                        if (feature.properties.localidad) {
+                            info += `<p><strong>Localidad:</strong> ${feature.properties.localidad}</p>`;
+                        }
+                        info += '</div>';
+                        layer.bindPopup(info);
+                    }
+                }).addTo(map1);
+            })
+            .catch(err => console.error("Error cargando Paraderos SITP:", err));
+
+
+        // --- Mapa 2: Trazados Troncales TransMilenio + Estaciones ---
+        const map2 = L.map('map2').setView([4.670473643688381, -74.09632602920297], 17);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map2);
+
+        // Leyenda para TransMilenio (actualizada con estaciones)
+        const legendTrans = L.control({ position: 'topright' });
+        legendTrans.onAdd = function () {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <h4>Trazados Troncales TransMilenio</h4>
+                <ul>
+                    <li><span class="transmilenio"></span> Trazados troncales</li>
+                    <li><span style="background-color: #892614; border-radius: 50%; width: 12px; height: 12px;"></span> Estaciones troncales</li>
+                </ul>
+            `;
+            return div;
+        };
+        legendTrans.addTo(map2);
+
+        // Cargar datos TransMilenio
+        fetch('Trazados_Troncales_de_TRANSMILENIO.geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: {
+                        color: '#E6654E',
+                        weight: 8,
+                        opacity: 0.9
+                    },
+                    onEachFeature: function (feature, layer) {
+                        let info = '';
+                        if (feature.properties.nombre_trazado_troncal) {
+                            info = `<h3>${feature.properties.nombre_trazado_troncal}</h3>`;
+                        } else if (feature.properties.letra_trazado_troncal) {
+                            info = `<h3>Trazado: ${feature.properties.letra_trazado_troncal}</h3>`;
+                        } else {
+                            info = '<h3>Trazado TransMilenio</h3>';
+                        }
+                        if (feature.properties.descripcion) {
+                            info += `<p>${feature.properties.descripcion}</p>`;
+                        } else {
+                            info += '<p>No hay descripción disponible.</p>';
+                        }
+                        layer.bindPopup(info);
+                    }
+                }).addTo(map2);
+            })
+            .catch(err => console.error("Error cargando TransMilenio:", err));
+
+        // Cargar Estaciones Troncales de TransMilenio
+        fetch('Estaciones_Troncales_de_TRANSMILENIO.geojson')
+            .then(response => {
+                if (!response.ok) throw new Error('Archivo no encontrado');
+                return response.json();
+            })
+            .then(data => {
+                const estacionesLayer = L.geoJSON(data, {
+                    pointToLayer: function (feature, latlng) {
+                        return L.circleMarker(latlng, {
+                            radius: 8,
+                            fillColor: '#892614',
+                            color: '#000',
+                            weight: 1.5,
+                            opacity: 1,
+                            fillOpacity: 0.9
+                        });
+                    },
+                    onEachFeature: function (feature, layer) {
+                        let info = '<div style="font-size: 14px; line-height: 1.5;">';
+                        if (feature.properties.nombre_estacion) {
+                            info += `<h3>${feature.properties.nombre_estacion}</h3>`;
+                        } else {
+                            info += '<h3>Estación TransMilenio</h3>';
+                        }
+                        if (feature.properties.troncal_estacion) {
+                            info += `<p><strong>Tipo:</strong> ${feature.properties.troncal_estacion}</p>`;
+                        }
+                        if (feature.properties.ubicacion_estacion) {
+                            info += `<p><strong>Dirección:</strong> ${feature.properties.ubicacion_estacion}</p>`;
+                        }
+                        if (feature.properties.localidad) {
+                            info += `<p><strong>Localidad:</strong> ${feature.properties.localidad}</p>`;
+                        }
+                        info += '</div>';
+                        layer.bindPopup(info);
+                    }
+                }).addTo(map2);
+
+                // Ajustar vista si hay estaciones
+                if (data.features.length > 0) {
+                    map2.fitBounds(estacionesLayer.getBounds(), { padding: [50, 50] });
+                }
+            })
+            .catch(err => console.error("Error cargando Estaciones TransMilenio:", err));
+    </script>
+</body>
+</html>
