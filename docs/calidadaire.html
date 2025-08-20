@@ -3,25 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calidad de aire - Bosque Popular</title>
-
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20n69z7+TSzGNnL4dC4x77z7/Yn9+1gL83r2D/0u4+W6="
-        crossorigin=""></script>
-    
+    <title>Calidad del Aire - Análisis Estadístico</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
         }
 
-        /* Estilos del encabezado */
         header {
             display: flex;
             align-items: center;
@@ -44,7 +33,6 @@
             margin-left: 20px;
         }
 
-        /* Barra de filtros */
         .filters-bar {
             background-color: #333333;
             display: flex;
@@ -57,7 +45,6 @@
             position: relative;
         }
 
-        /* Botón desplegable */
         .dropbtn {
             background-color: #555555;
             color: white;
@@ -72,7 +59,6 @@
             background-color: #777777;
         }
 
-        /* Contenedor del menú */
         .dropdown-content {
             display: none;
             position: absolute;
@@ -83,7 +69,6 @@
             z-index: 1;
         }
 
-        /* Opciones dentro del menú */
         .dropdown-content a {
             color: black;
             padding: 10px 14px;
@@ -95,30 +80,32 @@
             background-color: #ddd;
         }
 
-        /* Mostrar menú al hacer hover */
         .filter:hover .dropdown-content {
             display: block;
         }
 
-        /* Contenedor principal para el mapa */
-        .map-container {
-            flex-grow: 1;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        /* Estilos del mapa de Leaflet */
-        #map {
-            height: 100%;
-            width: 100%;
+        main {
+            padding: 20px;
         }
 
+        canvas {
+            margin: 30px auto;
+            display: block;
+            max-width: 800px;
+        }
+
+        .conclusion {
+            max-width: 900px;
+            margin: 40px auto;
+            font-size: 16px;
+            line-height: 1.6;
+            text-align: justify;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Encabezado -->
     <header>
         <div class="logo-container">
             <a href="index.html">
@@ -132,6 +119,7 @@
         </h1>
     </header>
 
+    <!-- Barra de Filtros -->
     <div class="filters-bar">
         <div class="filter">
             <button class="dropbtn">Equipamientos</button>
@@ -159,140 +147,71 @@
         </div>
     </div>
 
-    <div class="map-container">
-        <div id="map"></div>
-    </div>
-  <script>
-    const url = "http://iboca.ambientebogota.gov.co:8080/geoserver/sda_ca/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=sda_ca:calidad_aire&outputFormat=application/json";
+    <main>
+        <h2 style="text-align:center;">Análisis de Calidad del Aire - Julio 2025</h2>
 
-    async function getData() {
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
+        <canvas id="graficoPM25"></canvas>
+        <canvas id="graficoPM10"></canvas>
+        <canvas id="graficoO3"></canvas>
 
-        const estaciones = ["LAS FERIAS", "CDAR"];
-        const registros = data.features.filter(f => {
-          const nombre = f.properties.estacion.toUpperCase();
-          const fecha = new Date(f.properties.fecha);
-          return estaciones.includes(nombre) &&
-                 fecha.getMonth() === 7 &&  // Agosto (mes 7 en JS)
-                 fecha.getFullYear() === 2023;
-        });
+        <div class="conclusion">
+            <p>
+                Durante julio de 2025, los valores de <b>PM2.5</b> y <b>PM10</b> en las estaciones de 
+                <i>Las Ferias</i> y <i>CDAR</i> muestran variaciones asociadas al tránsito vehicular y a 
+                las condiciones meteorológicas de la localidad de Engativá. 
+            </p>
+            <p>
+                En general, los niveles promedio de PM2.5 se mantienen en rangos que pueden afectar la salud 
+                de grupos vulnerables (niños, adultos mayores y personas con enfermedades respiratorias), 
+                especialmente en sectores residenciales densos como el barrio <b>Bosque Popular</b>, que 
+                está rodeado de vías de alta circulación (Av. Boyacá, Calle 63). 
+            </p>
+            <p>
+                Los valores de <b>PM10</b>, aunque menos críticos que el PM2.5 en términos de penetración 
+                pulmonar, también reflejan episodios de contaminación que pueden reducir la calidad del aire 
+                en espacios abiertos y recreativos cercanos al barrio, como el parque Simón Bolívar y zonas 
+                verdes de Engativá. 
+            </p>
+            <p>
+                En conclusión, aunque los promedios no superen de manera constante los límites normativos, 
+                la exposición prolongada a estas concentraciones representa un riesgo crónico, lo que 
+                evidencia la necesidad de fortalecer políticas de movilidad sostenible y estrategias de 
+                reducción de emisiones en la zona. 
+            </p>
+        </div>
+    </main>
 
-        const resultados = {};
-        estaciones.forEach(est => resultados[est] = []);
+    <script>
+        // JSON ficticios para 6 combinaciones (PM2.5, PM10, O3 en Las Ferias y CDAR)
+        const dataPM25 = {
+            labels: ["01-Jul", "05-Jul", "10-Jul", "15-Jul", "20-Jul", "25-Jul", "30-Jul"],
+            datasets: [
+                { label: "Las Ferias", data: [22, 28, 35, 30, 26, 25, 27], borderColor: "red", fill: false },
+                { label: "CDAR", data: [20, 24, 30, 28, 22, 21, 23], borderColor: "blue", fill: false }
+            ]
+        };
 
-        registros.forEach(f => {
-          const est = f.properties.estacion.toUpperCase();
-          resultados[est].push({
-            fecha: f.properties.fecha,
-            pm10: f.properties.pm10,
-            pm25: f.properties.pm25
-          });
-        });
+        const dataPM10 = {
+            labels: ["01-Jul", "05-Jul", "10-Jul", "15-Jul", "20-Jul", "25-Jul", "30-Jul"],
+            datasets: [
+                { label: "Las Ferias", data: [40, 55, 60, 50, 45, 48, 52], borderColor: "green", fill: false },
+                { label: "CDAR", data: [38, 50, 55, 45, 40, 42, 47], borderColor: "orange", fill: false }
+            ]
+        };
 
-        mostrarGraficos(resultados);
-        mostrarEstadisticas(resultados);
-        mostrarAnalisis(resultados);
+        const dataO3 = {
+            labels: ["01-Jul", "05-Jul", "10-Jul", "15-Jul", "20-Jul", "25-Jul", "30-Jul"],
+            datasets: [
+                { label: "Las Ferias", data: [12, 18, 22, 20, 15, 14, 16], borderColor: "purple", fill: false },
+                { label: "CDAR", data: [10, 15, 19, 18, 13, 12, 14], borderColor: "brown", fill: false }
+            ]
+        };
 
-      } catch (err) {
-        console.error("Error cargando datos:", err);
-      }
-    }
-
-    function mostrarGraficos(datos) {
-      const labels = [...new Set(datos["LAS FERIAS"].map(d => d.fecha))];
-
-      // PM2.5
-      const datasetLF25 = datos["LAS FERIAS"].map(d => d.pm25);
-      const datasetCDAR25 = datos["CDAR"].map(d => d.pm25);
-
-      new Chart(document.getElementById("chartPM25"), {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            { label: "PM2.5 - Las Ferias", data: datasetLF25, borderColor: "red", fill: false },
-            { label: "PM2.5 - CDAR", data: datasetCDAR25, borderColor: "blue", fill: false }
-          ]
-        },
-        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-      });
-
-      // PM10
-      const datasetLF10 = datos["LAS FERIAS"].map(d => d.pm10);
-      const datasetCDAR10 = datos["CDAR"].map(d => d.pm10);
-
-      new Chart(document.getElementById("chartPM10"), {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            { label: "PM10 - Las Ferias", data: datasetLF10, borderColor: "orange", fill: false },
-            { label: "PM10 - CDAR", data: datasetCDAR10, borderColor: "green", fill: false }
-          ]
-        },
-        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-      });
-    }
-
-    function mostrarEstadisticas(datos) {
-      const statsDiv = document.getElementById("stats");
-
-      let html = "<h3>Estadísticas Básicas (PM10 y PM2.5)</h3>";
-
-      Object.keys(datos).forEach(est => {
-        const valores25 = datos[est].map(d => d.pm25).filter(v => v != null);
-        const promedio25 = (valores25.reduce((a,b) => a+b, 0) / valores25.length).toFixed(2);
-        const max25 = Math.max(...valores25).toFixed(2);
-        const min25 = Math.min(...valores25).toFixed(2);
-
-        const valores10 = datos[est].map(d => d.pm10).filter(v => v != null);
-        const promedio10 = (valores10.reduce((a,b) => a+b, 0) / valores10.length).toFixed(2);
-        const max10 = Math.max(...valores10).toFixed(2);
-        const min10 = Math.min(...valores10).toFixed(2);
-
-        html += `<p><b>${est}</b><br>
-                  PM2.5 → Promedio: ${promedio25} µg/m³ | Máx: ${max25} | Mín: ${min25}<br>
-                  PM10 → Promedio: ${promedio10} µg/m³ | Máx: ${max10} | Mín: ${min10}</p>`;
-      });
-
-      statsDiv.innerHTML = html;
-    }
-
-    function mostrarAnalisis(datos) {
-      const div = document.getElementById("analysis");
-
-      div.innerHTML = `
-        <h3>Análisis</h3>
-        <p>
-        Durante agosto de 2023, los valores de <b>PM2.5</b> y <b>PM10</b> en las estaciones de 
-        <i>Las Ferias</i> y <i>CDAR</i> muestran variaciones asociadas al tránsito vehicular y a 
-        las condiciones meteorológicas de la localidad de Engativá. 
-        </p>
-        <p>
-        En general, los niveles promedio de PM2.5 se mantienen en rangos que pueden afectar la salud 
-        de grupos vulnerables (niños, adultos mayores y personas con enfermedades respiratorias), 
-        especialmente en sectores residenciales densos como el barrio <b>Bosque Popular</b>, que 
-        está rodeado de vías de alta circulación (Av. Boyacá, Calle 63). 
-        </p>
-        <p>
-        Los valores de <b>PM10</b>, aunque menos críticos que el PM2.5 en términos de penetración 
-        pulmonar, también reflejan episodios de contaminación que pueden reducir la calidad del aire 
-        en espacios abiertos y recreativos cercanos al barrio, como el parque Simón Bolívar y zonas 
-        verdes de Engativá. 
-        </p>
-        <p>
-        En conclusión, aunque los promedios no superen de manera constante los límites normativos, 
-        la exposición prolongada a estas concentraciones representa un riesgo crónico, lo que 
-        evidencia la necesidad de fortalecer políticas de movilidad sostenible y estrategias de 
-        reducción de emisiones en la zona. 
-        </p>
-      `;
-    }
-
-    getData();
-  </script>
+        // Renderizar gráficos
+        new Chart(document.getElementById("graficoPM25"), { type: "line", data: dataPM25 });
+        new Chart(document.getElementById("graficoPM10"), { type: "line", data: dataPM10 });
+        new Chart(document.getElementById("graficoO3"), { type: "line", data: dataO3 });
+    </script>
 
 </body>
 </html>
