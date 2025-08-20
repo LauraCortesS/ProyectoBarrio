@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vías - Bosque Popular</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20n69z7+TSzGNnL4dC4x77z7/Yn9+1gL83r2D/0u4+W6="
+        crossorigin=""></script>
+    
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Estilos del encabezado */
+        header {
+            display: flex;
+            align-items: center;
+            background-color: #0D0D0D;
+            color: white;
+            padding: 5px 30px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        header img {
+            height: 35px;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-left: 20px;
+        }
+
+        /* Barra de filtros */
+        .filters-bar {
+            background-color: #333333;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+        }
+
+        .filter {
+            margin: 0 15px;
+            position: relative;
+        }
+
+        /* Botón desplegable */
+        .dropbtn {
+            background-color: #555555;
+            color: white;
+            padding: 8px 16px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .dropbtn:hover {
+            background-color: #777777;
+        }
+
+        /* Contenedor del menú */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 1;
+        }
+
+        /* Opciones dentro del menú */
+        .dropdown-content a {
+            color: black;
+            padding: 10px 14px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+
+        /* Mostrar menú al hacer hover */
+        .filter:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Contenedor principal para el mapa */
+        .map-container {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Estilos del mapa de Leaflet */
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <a href="index.html">
+                <img src="imagenes/mapa.png" alt="Logo">
+            </a>
+        </div>
+        <h1>
+            <a href="index.html" style="text-decoration: none; color: white;">
+                Bosque Popular
+            </a>
+        </h1>
+    </header>
+
+    <div class="filters-bar">
+        <div class="filter">
+            <button class="dropbtn">Equipamientos</button>
+            <div class="dropdown-content">
+                <a href="parques.html">Parques</a>
+                <a href="movilidad.html">Movilidad</a>
+                <a href="vias.html">Vías</a>
+            </div>
+        </div>
+
+        <div class="filter">
+            <button class="dropbtn">Problemáticas</button>
+            <div class="dropdown-content">
+                <a href="calidadaire.html">Calidad del aire</a>
+            </div>
+        </div>
+
+        <div class="filter">
+            <button class="dropbtn">Acerca de mí</button>
+            <div class="dropdown-content">
+                <a href="descripcion.html">Descripción</a>
+                <a href="ubicacion.html">Ubicación</a>
+                <a href="catastro3d.html">Catastro 3D</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="map-container">
+        <div id="map"></div>
+    </div>
+    <script>
+        // Coordenadas del barrio Bosque Popular
+        const latitud = 4.6865;
+        const longitud = -74.1167;
+        const zoom = 15;
+
+        // Inicializar mapa
+        const map = L.map('map').setView([latitud, longitud], zoom);
+
+        // Capa base OSM
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Marcador del barrio
+        L.marker([latitud, longitud]).addTo(map)
+            .bindPopup('<b>Barrio Bosque Popular</b><br>Localidad de Engativá, Bogotá.')
+            .openPopup();
+
+        // === Consulta a la API de ArcGIS con filtro por radio ===
+        // URL base de la API
+        const arcgisBaseUrl = 'https://services2.arcgis.com/NEwhEo9GGSHXcRXV/arcgis/rest/services/Malla_Vial_Integral_Bogota_D_C/FeatureServer/0/query';
+
+        // Parámetros de la consulta para un buffer de 1000 metros (1 km) alrededor del punto
+        const params = {
+            where: '1=1',
+            outFields: 'CLASIFICACION,CLASIFICACION_TIPO', // Campos que queremos obtener
+            geometry: `${longitud},${latitud}`,
+            geometryType: 'esriGeometryPoint',
+            inSR: 4326,
+            spatialRel: 'esriSpatialRelIntersects',
+            distance: 1000, // Distancia del buffer en metros
+            units: 'esriSRUnit_Meter',
+            outSR: 4326,
+            f: 'geojson'
+        };
+
+        // Construir la URL completa
+        const queryString = new URLSearchParams(params).toString();
+        const arcgisUrl = `${arcgisBaseUrl}?${queryString}`;
+
+        // Llamar a la API de ArcGIS
+        fetch(arcgisUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al cargar los datos de ArcGIS: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Agregar la capa GeoJSON al mapa con estilos
+                L.geoJSON(data, {
+                    style: function (feature) {
+                        const clasificacion = feature.properties.CLASIFICACION;
+                        switch (clasificacion) {
+                            case 'RED VIAL ARTERIAL PRINCIPAL': return {color: 'red', weight: 4};
+                            case 'RED VIAL INTERMEDIA': return {color: 'blue', weight: 3};
+                            case 'RED VIAL ARTERIAL COMPLEMENTARIA': return {color: 'orange', weight: 3};
+                            case 'RED VIAL LOCAL': return {color: 'green', weight: 2};
+                            default: return {color: 'gray', weight: 1.5};
+                        }
+                    },
+                    onEachFeature: function (feature, layer) {
+                        if (feature.properties) {
+                            let popupContent = `<b>Clasificación:</b> ${feature.properties.CLASIFICACION || 'N/A'}<br><b>Tipo:</b> ${feature.properties.CLASIFICACION_TIPO || 'N/A'}`;
+                            layer.bindPopup(popupContent);
+                        }
+                    }
+                }).addTo(map);
+            })
+            .catch(err => console.error('Error al cargar la malla vial:', err));
+    </script>
+
+</body>
+</html>
