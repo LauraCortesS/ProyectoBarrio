@@ -1,85 +1,167 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calidad del Aire - Engativá</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calidad de aire - Bosque Popular</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20n69z7+TSzGNnL4dC4x77z7/Yn9+1gL83r2D/0u4+W6="
+        crossorigin=""></script>
+    
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-    }
-    header {
-      display: flex;
-      align-items: center;
-      background-color: #0D0D0D;
-      color: white;
-      padding: 5px 30px;
-    }
-    .logo-container img { height: 35px; }
-    h1 { font-size: 20px; margin-left: 20px; }
-    .content {
-      padding: 20px;
-    }
-    .chart-container {
-      width: 90%;
-      max-width: 800px;
-      margin: 20px auto;
-    }
-    .stats {
-      margin: 20px auto;
-      max-width: 800px;
-      background: #f9f9f9;
-      padding: 15px;
-      border-radius: 8px;
-    }
-    .analysis {
-      margin: 20px auto;
-      max-width: 800px;
-      background: #eef5ff;
-      padding: 15px;
-      border-radius: 8px;
-    }
-  </style>
+        /* Estilos del encabezado */
+        header {
+            display: flex;
+            align-items: center;
+            background-color: #0D0D0D;
+            color: white;
+            padding: 5px 30px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        header img {
+            height: 35px;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-left: 20px;
+        }
+
+        /* Barra de filtros */
+        .filters-bar {
+            background-color: #333333;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+        }
+
+        .filter {
+            margin: 0 15px;
+            position: relative;
+        }
+
+        /* Botón desplegable */
+        .dropbtn {
+            background-color: #555555;
+            color: white;
+            padding: 8px 16px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .dropbtn:hover {
+            background-color: #777777;
+        }
+
+        /* Contenedor del menú */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 1;
+        }
+
+        /* Opciones dentro del menú */
+        .dropdown-content a {
+            color: black;
+            padding: 10px 14px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+
+        /* Mostrar menú al hacer hover */
+        .filter:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Contenedor principal para el mapa */
+        .map-container {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Estilos del mapa de Leaflet */
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+    </style>
 </head>
 <body>
 
-  <!-- Encabezado -->
-  <header>
-    <div class="logo-container">
-      <a href="index.html">
-        <img src="imagenes/mapa.png" alt="Logo">
-      </a>
+    <header>
+        <div class="logo-container">
+            <a href="index.html">
+                <img src="imagenes/mapa.png" alt="Logo">
+            </a>
+        </div>
+        <h1>
+            <a href="index.html" style="text-decoration: none; color: white;">
+                Bosque Popular
+            </a>
+        </h1>
+    </header>
+
+    <div class="filters-bar">
+        <div class="filter">
+            <button class="dropbtn">Equipamientos</button>
+            <div class="dropdown-content">
+                <a href="parques.html">Parques</a>
+                <a href="movilidad.html">Movilidad</a>
+                <a href="vias.html">Vías</a>
+            </div>
+        </div>
+
+        <div class="filter">
+            <button class="dropbtn">Problemáticas</button>
+            <div class="dropdown-content">
+                <a href="calidadaire.html">Calidad del aire</a>
+            </div>
+        </div>
+
+        <div class="filter">
+            <button class="dropbtn">Acerca de mí</button>
+            <div class="dropdown-content">
+                <a href="descripcion.html">Descripción</a>
+                <a href="ubicacion.html">Ubicación</a>
+                <a href="catastro3d.html">Catastro 3D</a>
+            </div>
+        </div>
     </div>
-    <h1>
-      <a href="index.html" style="text-decoration: none; color: white;">
-        Calidad del Aire - Engativá
-      </a>
-    </h1>
-  </header>
 
-  <div class="content">
-    <h2>Estaciones: Las Ferias y CDAR</h2>
-    <p>Datos del mes de agosto de 2023.</p>
-
-    <!-- Gráficos -->
-    <div class="chart-container">
-      <canvas id="chartPM25"></canvas>
+    <div class="map-container">
+        <div id="map"></div>
     </div>
-    <div class="chart-container">
-      <canvas id="chartPM10"></canvas>
-    </div>
-
-    <!-- Estadísticas -->
-    <div class="stats" id="stats"></div>
-
-    <!-- Análisis -->
-    <div class="analysis" id="analysis"></div>
-  </div>
-
   <script>
     const url = "http://iboca.ambientebogota.gov.co:8080/geoserver/sda_ca/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=sda_ca:calidad_aire&outputFormat=application/json";
 
